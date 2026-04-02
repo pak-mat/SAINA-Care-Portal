@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAINA-Care Portal - Administration Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="bg-primary-teal shadow-3xl fixed top-0 left-0 right-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-white text-2xl font-extrabold tracking-wider">SAINA-Care Portal</span>
+                </div>
+                <nav class="flex space-x-2 sm:space-x-4 text-white text-sm">
+                    <a id="nav-home" class="nav-link active" onclick="navigateTo('home')">Home</a>
+                    <a id="nav-appointments" class="nav-link" onclick="navigateTo('appointments')">Appointments</a>
+                    <a id="nav-permissions" class="nav-link" onclick="navigateTo('permissions')">Permissions</a>
+                    
+                    <div id="adminNavSection" class="hidden flex space-x-4">
+                        <a id="nav-admin-appointments" class="nav-link" onclick="navigateTo('admin-appointments')">Admin: Appointments</a>
+                        <a id="nav-admin-permissions" class="nav-link" onclick="navigateTo('admin-permissions')">Admin: Permissions</a>
+                        <a id="adminLogoutButton" class="nav-link bg-red-600 hover:bg-red-700 transition duration-300" onclick="handleAdminLogout(event)">Log Out</a>
+                    </div>
+                    <a id="adminLoginButton" class="nav-link bg-secondary-blue hover:bg-opacity-80 transition duration-300 btn-accent-hover" onclick="navigateTo('admin-login')">Admin Login</a>
+
+                    <div id="studentAuthContainer" class="flex space-x-4">
+                        <a id="studentLoginButton" class="nav-link bg-tertiary-indigo hover:bg-opacity-80 transition duration-300 btn-accent-hover" onclick="navigateTo('student-login')">Student Login</a>
+                        <a id="studentLogoutButton" class="nav-link bg-red-600 hover:bg-red-700 transition duration-300 hidden" onclick="handleStudentLogout(event)">Logout</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow pt-20 pb-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+
+        <section id="page-home" class="page-view space-y-10">
+            <div class="bg-white p-8 lg:p-12 rounded-2xl shadow-3xl border-l-8 border-primary-teal card-hover transition duration-300">
+                <h2 class="text-4xl font-extrabold text-gray-900 mb-4">Welcome to the Student Self-Service Portal 👋</h2>
+                <p class="text-gray-700 text-lg leading-relaxed">
+                    This portal provides quick access to essential services. You can book an appointment with a counselor or submit a formal request for a school change permission.
+                    Use the navigation links above to get started.
+                </p>
+                <div class="mt-8 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                    <button class="bg-secondary-blue text-white font-bold px-8 py-4 rounded-xl shadow-lg hover:bg-primary-teal transition duration-300 btn-fancy-hover" onclick="navigateTo('appointments')">
+                        Book an Appointment <span class="ml-2">🗓️</span>
+                    </button>
+                    <button class="border-2 border-primary-teal text-primary-teal font-bold px-8 py-4 rounded-xl shadow-lg hover:bg-primary-teal hover:text-white transition duration-300 btn-fancy-hover" onclick="navigateTo('permissions')">
+                        Request Permission <span class="ml-2">📄</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
+                <div class="bg-bg-light p-8 rounded-2xl shadow-lg border-t-4 border-secondary-blue card-hover transition duration-300">
+                    <h3 class="text-2xl font-bold text-primary-teal mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Your Appointments
+                    </h3>
+                    <ul class="space-y-4 text-gray-700">
+                        <li class="p-4 bg-white rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition duration-200">
+                            <p class="font-bold text-primary-teal">2026-11-28 10:00 AM</p>
+                            <p class="text-sm">Career Guidance 
+                                <span class="text-xs inline-block bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full ml-2">Confirmed</span>
+                            </p>
+                        </li>
+                        <li class="p-4 bg-white rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition duration-200">
+                            <p class="font-bold text-primary-teal">2026-12-05 02:30 PM</p>
+                            <p class="text-sm">Course Selection Review 
+                                <span class="text-xs inline-block bg-yellow-100 text-yellow-700 font-bold px-2 py-0.5 rounded-full ml-2">Pending</span>
+                            </p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="bg-bg-light p-8 rounded-2xl shadow-lg border-t-4 border-primary-teal card-hover transition duration-300">
+                    <h3 class="text-2xl font-bold text-primary-teal mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Your Requests
+                    </h3>
+                    <ul class="space-y-4 text-gray-700">
+                        <li class="p-4 bg-white rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition duration-200">
+                            <p class="font-bold text-primary-teal">School Transfer Request #1001</p>
+                            <p class="text-sm">
+                                <span class="text-xs inline-block bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">In Review</span>
+                            </p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="bg-bg-light p-8 rounded-2xl shadow-lg border-t-4 border-tertiary-indigo card-hover transition duration-300">
+                    <h3 class="text-2xl font-bold text-primary-teal mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Portal Status
+                    </h3>
+                    <div class="space-y-3 text-gray-700">
+                        <p class="flex justify-between items-center text-lg"><span class="font-medium">Total Students:</span> <span class="font-bold text-xl text-tertiary-indigo">540</span></p>
+                        <p class="flex justify-between items-center text-lg"><span class="font-medium">Open Tickets:</span> <span class="font-bold text-xl text-red-600">32</span></p>
+                        <p class="flex justify-between items-center text-lg"><span class="font-medium">Next Maintenance:</span> <span class="font-bold text-xl text-primary-teal">2026-09-01</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-appointments" class="page-view hidden">
+            <div class="bg-white p-8 lg:p-10 rounded-2xl shadow-3xl">
+                <h2 class="text-3xl font-bold text-primary-teal mb-8 border-b pb-4">Book a Counseling Appointment</h2>
+                <form id="appointmentForm" onsubmit="handleAppointmentSubmit(event)" class="space-y-6">
+                    
+                    <div id="appointment-field-name" class="student-auth-field">
+                        <label for="studentName" class="block text-base font-semibold text-gray-700 mb-2">Your Full Name</label>
+                        <input type="text" id="studentName" name="studentName" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition shadow-sm">
+                    </div>
+
+                    <div id="appointment-field-email" class="student-auth-field">
+                        <label for="studentEmail" class="block text-base font-semibold text-gray-700 mb-2">Your Email Address</label>
+                        <input type="email" id="studentEmail" name="studentEmail" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition shadow-sm">
+                    </div>
+                    
+                    <div id="appointment-field-grade" class="student-auth-field">
+                        <label for="gradeLevel" class="block text-base font-semibold text-gray-700 mb-2">Your Current Grade Level</label>
+                        <select id="gradeLevel" name="gradeLevel" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition appearance-none shadow-sm bg-white">
+                            <option value="" disabled selected>Select Grade</option>
+                            <option value="9">Grade 9</option>
+                            <option value="10">Grade 10</option>
+                            <option value="11">Grade 11</option>
+                            <option value="12">Grade 12</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="sessionTopic" class="block text-base font-semibold text-gray-700 mb-2">Topic for Discussion</label>
+                        <select id="sessionTopic" name="sessionTopic" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition appearance-none shadow-sm bg-white">
+                            <option value="" disabled selected>Select a topic</option>
+                            <option value="Career Guidance">Career Guidance</option>
+                            <option value="Academic Performance">Academic Performance</option>
+                            <option value="Mental Health Support">Mental Health Support</option>
+                            <option value="University Applications">University Applications</option>
+                            <option value="Other">Other (Specify in notes)</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="specificGoals" class="block text-base font-semibold text-gray-700 mb-2">Specific Goals for the Session (What do you hope to achieve? Min. 20 chars)</label>
+                        <textarea id="specificGoals" name="specificGoals" rows="4" required minlength="20" class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition shadow-sm"></textarea>
+                    </div>
+
+                    <div class="space-y-4 pt-4 border-t border-gray-200 bg-bg-light p-6 rounded-xl">
+                        <p class="font-bold text-lg text-primary-teal">Preferred Time Slots (Select up to 3):</p>
+                        
+                        <div>
+                            <label for="slot1" class="block text-sm font-medium text-gray-700 mb-1">Slot 1 (Most Preferred)</label>
+                            <input type="datetime-local" id="slot1" name="slot1" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition shadow-sm">
+                        </div>
+                        
+                        <div>
+                            <label for="slot2" class="block text-sm font-medium text-gray-700 mb-1">Slot 2</label>
+                            <input type="datetime-local" id="slot2" name="slot2" class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition shadow-sm">
+                        </div>
+                        
+                        <div>
+                            <label for="slot3" class="block text-sm font-medium text-gray-700 mb-1">Slot 3</label>
+                            <input type="datetime-local" id="slot3" name="slot3" class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition shadow-sm">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="appointmentBtn" class="w-full bg-primary-teal text-white font-bold text-lg px-6 py-4 rounded-xl shadow-lg hover:bg-secondary-blue transition duration-300 btn-fancy-hover">
+                        Submit Appointment Request
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <section id="page-permissions" class="page-view hidden">
+            <div class="bg-white p-8 lg:p-10 rounded-2xl shadow-3xl">
+                <h2 class="text-3xl font-bold text-primary-teal mb-8 border-b pb-4">Request School Change Permission</h2>
+                <form id="permissionForm" onsubmit="handlePermissionSubmit(event)" class="space-y-6">
+                    
+                    <div id="permission-field-name" class="student-auth-field">
+                        <label for="permissionStudentName" class="block text-base font-semibold text-gray-700 mb-2">Your Full Name (Student)</label>
+                        <input type="text" id="permissionStudentName" name="studentName" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition shadow-sm">
+                    </div>
+
+                    <div>
+                        <label for="parentContact" class="block text-base font-semibold text-gray-700 mb-2">Parent/Guardian Contact Email (Required)</label>
+                        <input type="email" id="parentContact" name="parentContact" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition shadow-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="transferDate" class="block text-base font-semibold text-gray-700 mb-2">Proposed Transfer Date</label>
+                        <input type="date" id="transferDate" name="transferDate" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition shadow-sm">
+                    </div>
+
+                    <div>
+                        <label for="transferReason" class="block text-base font-semibold text-gray-700 mb-2">Primary Reason for Request</label>
+                        <select id="transferReason" name="transferReason" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition appearance-none shadow-sm bg-white">
+                            <option value="" disabled selected>Select a reason</option>
+                            <option value="Family Relocation">Family Relocation</option>
+                            <option value="Specialized Program Access">Access to Specialized Program</option>
+                            <option value="Personal Hardship">Personal or Medical Hardship</option>
+                            <option value="Academic Fit">Better Academic Fit</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="destinationSchool" class="block text-base font-semibold text-gray-700 mb-2">Destination School Name</label>
+                        <input type="text" id="destinationSchool" name="destinationSchool" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition shadow-sm">
+                    </div>
+
+                    <div>
+                        <label for="detailedExplanation" class="block text-base font-semibold text-gray-700 mb-2">Detailed Explanation (Min. 100 words)</label>
+                        <textarea id="detailedExplanation" name="detailedExplanation" rows="6" required minlength="100" class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition shadow-sm"></textarea>
+                    </div>
+
+                    <button type="submit" id="permissionBtn" class="w-full bg-primary-teal text-white font-bold text-lg px-6 py-4 rounded-xl shadow-lg hover:bg-secondary-blue transition duration-300 btn-fancy-hover">
+                        Submit Permission Request
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <section id="page-admin-login" class="page-view hidden max-w-md mx-auto">
+            <div class="bg-white p-8 rounded-2xl shadow-3xl border-t-4 border-secondary-blue">
+                <h2 class="text-3xl font-bold text-secondary-blue mb-8">Admin Dashboard Login</h2>
+                <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="space-y-6">
+                    <div>
+                        <label for="adminUsername" class="block text-base font-semibold text-gray-700 mb-2">Username</label>
+                        <input type="text" id="adminUsername" name="username" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition shadow-sm">
+                    </div>
+                    <div>
+                        <label for="adminPassword" class="block text-base font-semibold text-gray-700 mb-2">Password</label>
+                        <input type="password" id="adminPassword" name="password" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-secondary-blue focus:border-secondary-blue transition shadow-sm">
+                    </div>
+                    
+                    <p id="adminLoginMessage" class="hidden text-sm text-red-600 font-bold p-3 bg-red-50 rounded-lg"></p>
+
+                    <button type="submit" id="loginBtn" class="w-full bg-secondary-blue text-white font-bold text-lg px-6 py-4 rounded-xl shadow-lg hover:bg-primary-teal transition duration-300 btn-accent-hover">
+                        Log In Securely
+                    </button>
+                </form>
+            </div>
+        </section>
+        
+        <section id="page-student-login" class="page-view hidden max-w-md mx-auto">
+            <div class="bg-white p-8 rounded-2xl shadow-3xl border-t-4 border-tertiary-indigo">
+                <h2 class="text-3xl font-bold text-tertiary-indigo mb-8">Student Portal Login</h2>
+                <form id="studentLoginForm" onsubmit="handleStudentLogin(event)" class="space-y-6">
+                    <div>
+                        <label for="studentUsername" class="block text-base font-semibold text-gray-700 mb-2">Student Username</label>
+                        <input type="text" id="studentUsername" name="username" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-tertiary-indigo focus:border-tertiary-indigo transition shadow-sm" placeholder="e.g., ali.ahmad">
+                    </div>
+                    <div>
+                        <label for="studentPassword" class="block text-base font-semibold text-gray-700 mb-2">Password</label>
+                        <input type="password" id="studentPassword" name="password" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-tertiary-indigo focus:border-tertiary-indigo transition shadow-sm">
+                    </div>
+                    
+                    <p id="studentLoginMessage" class="hidden text-sm text-red-600 font-bold p-3 bg-red-50 rounded-lg"></p>
+
+                    <button type="submit" id="studentLoginBtn" class="w-full bg-tertiary-indigo text-white font-bold text-lg px-6 py-4 rounded-xl shadow-3xl hover:bg-secondary-blue transition duration-300 btn-fancy-hover">
+                        Access My Portal
+                    </button>
+                </form>
+                <p class="mt-6 text-center text-sm text-gray-600">
+                    <span class="mr-1">New student?</span>
+                    <a href="#" onclick="navigateTo('student-register'); return false;" class="font-bold text-primary-teal hover:text-secondary-blue transition duration-300">Create New Account</a>
+                </p>
+            </div>
+        </section>
+        
+        <section id="page-student-register" class="page-view hidden max-w-lg mx-auto">
+            <div class="bg-white p-8 rounded-2xl shadow-3xl border-t-4 border-primary-teal">
+                <h2 class="text-3xl font-bold text-primary-teal mb-8">New Student Account Registration</h2>
+                <form id="studentRegistrationForm" onsubmit="handleStudentRegistration(event)" class="space-y-6">
+                    <div>
+                        <label for="regId" class="block text-base font-semibold text-gray-700 mb-2">Student ID (4-digit number)</label>
+                        <input type="text" id="regId" name="id" required minlength="4" maxlength="4" pattern="[0-9]{4}" title="Must be a 4-digit number" class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-primary-teal focus:border-primary-teal transition shadow-sm" placeholder="e.g., 1003">
+                    </div>
+                    <div>
+                        <label for="regName" class="block text-base font-semibold text-gray-700 mb-2">Full Name</label>
+                        <input type="text" id="regName" name="name" required class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-primary-teal focus:border-primary-teal transition shadow-sm" placeholder="e.g., Jane Doe">
+                    </div>
+                    <div>
+                        <label for="regUsername" class="block text-base font-semibold text-gray-700 mb-2">Preferred Username (e.g., jane.doe)</label>
+                        <input type="text" id="regUsername" name="username" required minlength="4" class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-primary-teal focus:border-primary-teal transition shadow-sm" placeholder="e.g., jane.doe">
+                    </div>
+                    <div>
+                        <label for="regPassword" class="block text-base font-semibold text-gray-700 mb-2">Password (Min. 6 characters)</label>
+                        <input type="password" id="regPassword" name="password" required minlength="6" class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-primary-teal focus:border-primary-teal transition shadow-sm">
+                    </div>
+                    <div>
+                        <label for="regConfirmPassword" class="block text-base font-semibold text-gray-700 mb-2">Confirm Password</label>
+                        <input type="password" id="regConfirmPassword" name="confirmPassword" required minlength="6" class="w-full p-4 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-primary-teal focus:border-primary-teal transition shadow-sm">
+                    </div>
+                    
+                    <p id="regMessage" class="hidden text-sm text-red-600 font-bold p-3 bg-red-50 rounded-lg"></p>
+
+                    <button type="submit" id="registerBtn" class="w-full bg-primary-teal text-white font-bold text-lg px-6 py-4 rounded-xl shadow-lg hover:bg-secondary-blue transition duration-300 btn-fancy-hover">
+                        Register Account
+                    </button>
+                </form>
+                <p class="mt-6 text-center text-sm text-gray-600">
+                    <span class="mr-1">Already have an account?</span>
+                    <a href="#" onclick="navigateTo('student-login'); return false;" class="font-bold text-tertiary-indigo hover:text-secondary-blue transition duration-300">Login Here</a>
+                </p>
+            </div>
+        </section>
+
+
+        <section id="page-admin-appointments" class="page-view hidden">
+            <h2 class="text-3xl font-bold text-primary-teal mb-6">Admin Dashboard: Appointment Requests</h2>
+            <div id="appointmentList" class="space-y-6">
+                <div id="noAppointmentMessage" class="hidden bg-yellow-50 p-6 rounded-xl text-yellow-800 text-center font-bold border-l-4 border-yellow-400 shadow-md">
+                    No new appointment requests at this time.
+                </div>
+            </div>
+        </section>
+
+        <section id="page-admin-permissions" class="page-view hidden">
+            <h2 class="text-3xl font-bold text-primary-teal mb-6">Admin Dashboard: School Change Permissions</h2>
+            <div id="permissionList" class="space-y-6">
+                <div id="noPermissionMessage" class="hidden bg-yellow-50 p-6 rounded-xl text-yellow-800 text-center font-bold border-l-4 border-yellow-400 shadow-md">
+                    No pending school change permission requests.
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="confirmationModal" class="fixed inset-0 bg-gray-900 bg-opacity-80 hidden flex items-center justify-center p-4 z-50 transition-opacity">
+        <div class="bg-white p-8 rounded-2xl shadow-3xl max-w-lg w-full transform scale-100 transition-transform duration-300">
+            <div id="modalContent">
+                </div>
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeModal()" class="bg-gray-200 text-gray-800 font-semibold px-6 py-3 rounded-xl hover:bg-gray-300 transition duration-300 shadow-md">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script> 
+</body>
+</html>

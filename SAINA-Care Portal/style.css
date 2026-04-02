@@ -1,0 +1,72 @@
+/* --- IMPRESSIVE UPGRADE: Refined Color Palette Variables --- */
+:root {
+    --primary-teal: #00796b; /* Dark Teal - Main Brand Color */
+    --secondary-blue: #00bcd4; /* Cyan/Light Blue - Accent/Action Color */
+    --tertiary-indigo: #4c51bf; /* New: Deep Indigo for a touch of professionalism */
+    --bg-light: #f4f6f9; /* Lighter, subtle background for sections */
+}
+
+/* --- General Body Styles --- */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #eef2f7; /* Keep light gray background */
+}
+
+/* --- Custom Tailwind Helper Classes (for Tailwind's lack of CSS vars in classes) --- */
+.text-primary-teal { color: var(--primary-teal); }
+.bg-primary-teal { background-color: var(--primary-teal); }
+.hover\:bg-primary-teal:hover { background-color: var(--primary-teal); }
+.text-secondary-blue { color: var(--secondary-blue); }
+.bg-secondary-blue { background-color: var(--secondary-blue); }
+.hover\:bg-secondary-blue:hover { background-color: #0097a7; } /* Slightly darker hover */
+.focus\:ring-secondary-blue:focus { --tw-ring-color: var(--secondary-blue); }
+.focus\:border-secondary-blue:focus { border-color: var(--secondary-blue); }
+.bg-bg-light { background-color: var(--bg-light); }
+
+/* NEW: Class for the new student login styling */
+.focus\:ring-tertiary-indigo:focus { --tw-ring-color: var(--tertiary-indigo); }
+.focus\:border-tertiary-indigo:focus { border-color: var(--tertiary-indigo); }
+
+
+/* --- IMPRESSIVE UPGRADE: Navigation Look --- */
+.nav-link {
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease; /* Smoother transitions */
+    cursor: pointer;
+    font-weight: 600;
+}
+.nav-link:not(.active):hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px); /* Subtle hover lift */
+}
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.3);
+    /* Stronger highlight for active state */
+    box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.2); 
+    border-left: 4px solid var(--secondary-blue);
+    padding-left: 0.75rem;
+    transform: none; /* No lift on active */
+}
+
+/* --- IMPRESSIVE UPGRADE: Button Hover Effects --- */
+.btn-fancy-hover {
+    transition: all 0.3s ease;
+}
+.btn-fancy-hover:hover {
+    box-shadow: 0 8px 15px rgba(0, 121, 107, 0.3); /* Shadow on hover for primary */
+    transform: translateY(-1px);
+}
+.btn-accent-hover:hover {
+    box-shadow: 0 8px 15px rgba(0, 188, 212, 0.3); /* Shadow on hover for secondary */
+    transform: translateY(-1px);
+}
+
+/* --- IMPRESSIVE UPGRADE: Card Shadow Effects --- */
+.shadow-3xl {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08); /* Deeper, softer shadow */
+}
+.card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
