@@ -5,7 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: '/saina-care/',
+    base: '/SAINA-Care-Portal/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
