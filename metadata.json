@@ -1,0 +1,6 @@
+{
+  "name": "Saina Care Portal",
+  "description": "A digital counseling web application for students featuring appointment scheduling and school transfer permissions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
