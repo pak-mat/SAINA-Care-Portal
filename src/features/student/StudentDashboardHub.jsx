@@ -1,17 +1,17 @@
 // File: src/features/student/StudentDashboardHub.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { Home, History, CalendarPlus, FileInput, MessageSquare, Settings, BookOpen, Bug, Compass } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 import { markNotificationsAsRead, fetchNotifications } from '../../services/localEngine';
 import Navbar from '../../components/layout/Navbar';
 
-import AppointmentForm from './components/AppointmentForm';
-import PermissionForm from './components/PermissionForm';
-import RequestHistoryHub from './components/RequestHistoryHub';
-import StudentChatTab from './components/StudentChatTab';
-import SettingsTab from './SettingsTab';
-import ResourceVault from './ResourceVault';
+const AppointmentForm = lazy(() => import('./components/AppointmentForm'));
+const PermissionForm = lazy(() => import('./components/PermissionForm'));
+const RequestHistoryHub = lazy(() => import('./components/RequestHistoryHub'));
+const StudentChatTab = lazy(() => import('./components/StudentChatTab'));
+const SettingsTab = lazy(() => import('./SettingsTab'));
+const ResourceVault = lazy(() => import('./ResourceVault'));
 import FeedbackTab from '../shared/FeedbackTab';
 import AppointmentNotification from '../../components/ui/AppointmentNotification';
 import MyProfilesTab from '../shared/MyProfilesTab';
@@ -35,7 +35,7 @@ export default function StudentDashboardHub() {
 
   if (!user) return null;
 
-  const studentRequests = requests.filter(r => r.studentId === user.id);
+  const studentRequests = useMemo(() => requests.filter(r => r.studentId === user.id), [requests, user.id]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -129,7 +129,7 @@ export default function StudentDashboardHub() {
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
-                className={`relative flex-shrink-0 flex flex-col items-center justify-center gap-1 p-2 rounded-lg text-xs font-medium transition-colors w-[72px]
+                className={`relative flex-shrink-0 flex flex-col items-center justify-center gap-1 p-2 rounded-lg text-xs font-medium transition-colors min-h-[48px] min-w-[48px] w-[72px]
                   ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100'}
                 `}
               >
@@ -159,17 +159,19 @@ export default function StudentDashboardHub() {
         <div className="md:hidden fixed bottom-0 right-0 h-[64px] w-12 bg-gradient-to-l from-white dark:from-zinc-800 to-transparent z-[60] pointer-events-none" />
 
         <main className={`flex-1 min-h-0 ${(activeTab === 'chat' || activeTab === 'profiles') ? 'overflow-hidden p-0 sm:p-2 md:p-3' : 'overflow-y-auto p-4 sm:p-6 lg:p-8'} bg-transparent flex flex-col`}>
-          <AnimatePresence mode="wait">
-            {activeTab === 'home' && <HomeTab key="home" user={user} requests={studentRequests} notifications={notifications} />}
-            {activeTab === 'profiles' && <MyProfilesTab key="profiles" onTabChange={handleTabChange} />}
-            {activeTab === 'history' && <RequestHistoryHub key="history" requests={studentRequests} />}
-            {activeTab === 'appointment' && <AppointmentForm key="appointment" onDone={() => setActiveTab('history')} user={user} />}
-            {activeTab === 'transfer' && <PermissionForm key="transfer" onDone={() => setActiveTab('history')} user={user} />}
-            {activeTab === 'chat' && <StudentChatTab key="chat" user={user} requests={studentRequests} />}
-            {activeTab === 'resources' && <ResourceVault key="resources" />}
-            {activeTab === 'feedback' && <FeedbackTab key="feedback" />}
-            {activeTab === 'settings' && <SettingsTab key="settings" />}
-          </AnimatePresence>
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div></div>}>
+            <AnimatePresence mode="wait">
+              {activeTab === 'home' && <HomeTab key="home" user={user} requests={studentRequests} notifications={notifications} />}
+              {activeTab === 'profiles' && <MyProfilesTab key="profiles" onTabChange={handleTabChange} />}
+              {activeTab === 'history' && <RequestHistoryHub key="history" requests={studentRequests} />}
+              {activeTab === 'appointment' && <AppointmentForm key="appointment" onDone={() => setActiveTab('history')} user={user} />}
+              {activeTab === 'transfer' && <PermissionForm key="transfer" onDone={() => setActiveTab('history')} user={user} />}
+              {activeTab === 'chat' && <StudentChatTab key="chat" user={user} requests={studentRequests} />}
+              {activeTab === 'resources' && <ResourceVault key="resources" />}
+              {activeTab === 'feedback' && <FeedbackTab key="feedback" />}
+              {activeTab === 'settings' && <SettingsTab key="settings" />}
+            </AnimatePresence>
+          </Suspense>
         </main>
       </div>
       </div>

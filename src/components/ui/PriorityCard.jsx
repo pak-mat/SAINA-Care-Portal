@@ -1,9 +1,9 @@
 // File: src/components/ui/PriorityCard.jsx
-import React from 'react';
+import React, { memo } from 'react';
 import { Clock, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
-export default function PriorityCard({ request, onClick }) {
+const PriorityCard = memo(({ request, onClick }) => {
   const isUrgent = new Date().getTime() - new Date(request.submissionDate || 0).getTime() > 3 * 24 * 60 * 60 * 1000 && request.status !== 'approved' && request.status !== 'rejected';
   
   return (
@@ -47,4 +47,6 @@ export default function PriorityCard({ request, onClick }) {
       </div>
     </motion.div>
   );
-}
+});
+
+export default PriorityCard;

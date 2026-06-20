@@ -1,12 +1,34 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
   return {
     base: '/SAINA-Care-Portal/',
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(), 
+      tailwindcss(),
+      VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['logo.webp'],
+        manifest: {
+          name: 'Saina Care Portal',
+          short_name: 'SainaCare',
+          description: 'Saina Care Portal for students and counselors',
+          theme_color: '#10b981',
+          icons: [
+            {
+              src: 'logo.webp',
+              sizes: '512x512',
+              type: 'image/webp',
+              purpose: 'any maskable'
+            }
+          ]
+        }
+      })
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

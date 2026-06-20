@@ -1,17 +1,18 @@
 // File: src/features/counselor/CounselorDashboardHub.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { Inbox, MessageSquare, Bug, Settings, KanbanSquare, CalendarDays, Compass } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getAllUsers, fetchMessagesByCounselor, sendChatMessage } from '../../services/localEngine';
 import { useAuth } from '../../context/AuthContext';
 import { useDatabaseEvent } from '../../hooks/useDatabaseEvent';
 import Navbar from '../../components/layout/Navbar';
-import CounselorSettingsTab from './CounselorSettingsTab';
-import CounselorAvailabilityTab from './CounselorAvailabilityTab';
-import FeedbackTab from '../shared/FeedbackTab';
+
+const CounselorSettingsTab = lazy(() => import('./CounselorSettingsTab'));
+const CounselorAvailabilityTab = lazy(() => import('./CounselorAvailabilityTab'));
+const FeedbackTab = lazy(() => import('../shared/FeedbackTab'));
+const MyProfilesTab = lazy(() => import('../shared/MyProfilesTab'));
+const CaseDetailSidebar = lazy(() => import('./CaseDetailSidebar'));
 import PriorityCard from '../../components/ui/PriorityCard';
-import MyProfilesTab from '../shared/MyProfilesTab';
-import CaseDetailSidebar from './CaseDetailSidebar';
 import { ChevronRight, ImagePlus, Send, X } from 'lucide-react';
 import { getRelativeTime } from '../../utils/time';
 
@@ -116,7 +117,7 @@ export default function CounselorDashboardHub() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative flex-shrink-0 flex flex-col items-center justify-center gap-1 p-2 rounded-lg text-xs font-medium transition-colors w-[72px]
+                className={`relative flex-shrink-0 flex flex-col items-center justify-center gap-1 p-2 rounded-lg text-xs font-medium transition-colors min-h-[48px] min-w-[48px] w-[72px]
                   ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-zinc-300'}
                 `}
               >
@@ -146,45 +147,49 @@ export default function CounselorDashboardHub() {
         <div className="md:hidden fixed bottom-0 right-0 h-[64px] w-12 bg-gradient-to-l from-white dark:from-zinc-900 to-transparent z-[60] pointer-events-none" />
 
         <main className="flex-1 overflow-hidden min-h-0 bg-transparent flex flex-col relative w-full">
-          <AnimatePresence mode="wait">
-            {activeTab === 'workspace' && <KanbanWorkspace key="workspace" requests={requests} user={user} onSelectCase={setSelectedCase} />}
-            {activeTab === 'profiles' && (
-              <div key="profiles" className="h-full w-full overflow-y-auto p-4 sm:p-6 lg:p-8">
-                <MyProfilesTab onTabChange={setActiveTab} />
-              </div>
-            )}
-            {activeTab === 'chat' && <CounselorChatTab key="chat" user={user} defaultStudentId={chatStudentId} />}
-            {activeTab === 'feedback' && (
-              <div key="feedback" className="h-full w-full overflow-y-auto p-4 sm:p-6 lg:p-8">
-                <FeedbackTab />
-              </div>
-            )}
-            {activeTab === 'availability' && (
-              <div key="availability" className="h-full w-full overflow-y-auto p-4 sm:p-6 lg:p-8">
-                <CounselorAvailabilityTab />
-              </div>
-            )}
-            {activeTab === 'settings' && (
-              <div key="settings" className="h-full w-full overflow-y-auto p-4 sm:p-6 lg:p-8">
-                <CounselorSettingsTab />
-              </div>
-            )}
-          </AnimatePresence>
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+            <AnimatePresence mode="wait">
+              {activeTab === 'workspace' && <KanbanWorkspace key="workspace" requests={requests} user={user} onSelectCase={setSelectedCase} />}
+              {activeTab === 'profiles' && (
+                <div key="profiles" className="h-full w-full overflow-y-auto p-4 sm:p-6 lg:p-8">
+                  <MyProfilesTab onTabChange={setActiveTab} />
+                </div>
+              )}
+              {activeTab === 'chat' && <CounselorChatTab key="chat" user={user} defaultStudentId={chatStudentId} />}
+              {activeTab === 'feedback' && (
+                <div key="feedback" className="h-full w-full overflow-y-auto p-4 sm:p-6 lg:p-8">
+                  <FeedbackTab />
+                </div>
+              )}
+              {activeTab === 'availability' && (
+                <div key="availability" className="h-full w-full overflow-y-auto p-4 sm:p-6 lg:p-8">
+                  <CounselorAvailabilityTab />
+                </div>
+              )}
+              {activeTab === 'settings' && (
+                <div key="settings" className="h-full w-full overflow-y-auto p-4 sm:p-6 lg:p-8">
+                  <CounselorSettingsTab />
+                </div>
+              )}
+            </AnimatePresence>
+          </Suspense>
         </main>
       </div>
 
       <AnimatePresence>
         {selectedCase && (
-          <CaseDetailSidebar 
-            request={selectedCase} 
-            onClose={() => setSelectedCase(null)} 
-            user={user} 
-            onStartChat={() => {
-              setChatStudentId(selectedCase.studentId);
-              setActiveTab('chat');
-              setSelectedCase(null);
-            }}
-          />
+          <Suspense fallback={<div className="absolute right-0 top-0 bottom-0 w-96 bg-white flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+            <CaseDetailSidebar 
+              request={selectedCase} 
+              onClose={() => setSelectedCase(null)} 
+              user={user} 
+              onStartChat={() => {
+                setChatStudentId(selectedCase.studentId);
+                setActiveTab('chat');
+                setSelectedCase(null);
+              }}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
       </div>
@@ -193,17 +198,17 @@ export default function CounselorDashboardHub() {
 }
 
 function KanbanWorkspace({ requests, user, onSelectCase }) {
-  const pool = requests.filter(r => r.status === 'pending' && !r.assignedTo);
-  const active = requests.filter(r => r.status === 'in-progress' && r.assignedTo === user.id);
-  const awaiting = requests.filter(r => r.status === 'pending' && r.assignedTo === user.id);
-  const archived = requests.filter(r => ['approved', 'rejected'].includes(r.status));
+  const pool = useMemo(() => requests.filter(r => r.status === 'pending' && !r.assignedTo), [requests]);
+  const active = useMemo(() => requests.filter(r => r.status === 'in-progress' && r.assignedTo === user.id), [requests, user.id]);
+  const awaiting = useMemo(() => requests.filter(r => r.status === 'pending' && r.assignedTo === user.id), [requests, user.id]);
+  const archived = useMemo(() => requests.filter(r => ['approved', 'rejected'].includes(r.status)), [requests]);
 
-  const columns = [
+  const columns = useMemo(() => [
     { title: 'Triage Pool', count: pool.length, items: pool },
     { title: 'Active Processing', count: active.length, items: active },
     { title: 'Awaiting Response', count: awaiting.length, items: awaiting },
     { title: 'Archived Cases', count: archived.length, items: archived }
-  ];
+  ], [pool, active, awaiting, archived]);
 
   return (
     <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}} className="h-full flex flex-col p-4 sm:p-6 overflow-hidden">
@@ -283,7 +288,9 @@ function CounselorChatTab({ user, defaultStudentId }) {
     setImageBase64(null);
   };
 
-  const activeMessages = messages.filter(m => m.studentId === activeStudentId).sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  const activeMessages = useMemo(() => 
+    messages.filter(m => m.studentId === activeStudentId).sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+  , [messages, activeStudentId]);
 
   useEffect(() => {
     if (chatEndRef.current) {
