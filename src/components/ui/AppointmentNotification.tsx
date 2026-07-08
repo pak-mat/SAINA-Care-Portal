@@ -2,7 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CalendarClock, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getAllRequests, markAppointmentNotified } from '../../services/localEngine';
+
+const getAllRequests = () => [];
+const markAppointmentNotified = (id: string) => {};
 
 interface NotificationData {
   id: string;

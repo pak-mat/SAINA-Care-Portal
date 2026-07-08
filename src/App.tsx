@@ -1,7 +1,10 @@
 // File: src/App.tsx
 import React, { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { GlobalNotifications } from './components/GlobalNotifications';
 import AppLayoutWrapper from './components/layout/AppLayoutWrapper';
 import { Loader2 } from 'lucide-react';
 
@@ -67,8 +70,27 @@ function LoadingFallback() {
   );
 }
 
-function AppContent() {
-  const { user, loadingApp } = useAuth();
+function RequireAuth({ children, role }: { children: React.ReactNode, role?: string }) {
+  const { user } = useAuth();
+  const location = useLocation();
+
+  if (!user) {
+    if (role === 'counselor' || location.pathname.startsWith('/counselor')) {
+      return <Navigate to="/counselor/login" replace />;
+    }
+    return <Navigate to="/login" replace />;
+  }
+
+  if (role && user.role !== role) {
+    if (user.role === 'student') return <Navigate to="/student/dashboard" replace />;
+    if (user.role === 'counselor') return <Navigate to="/counselor/dashboard" replace />;
+  }
+
+  return children;
+}
+
+function AppRoutes() {
+  const { loadingApp } = useAuth();
 
   if (loadingApp) {
     return (
@@ -78,55 +100,62 @@ function AppContent() {
     );
   }
 
-  if (!user) {
-    const isCounselorRoute = window.location.pathname.startsWith('/counselor');
-
-    if (isCounselorRoute) {
-      return (
-        <AppLayoutWrapper>
-          <Suspense fallback={<LoadingFallback />}>
-            <CounselorLoginScreen />
-          </Suspense>
-        </AppLayoutWrapper>
-      );
-    }
-
-    return (
-      <AppLayoutWrapper>
-        <Suspense fallback={<LoadingFallback />}>
-          <LoginScreen />
-        </Suspense>
-      </AppLayoutWrapper>
-    );
-  }
-
-  if (user.role === 'student') {
-    return (
-      <AppLayoutWrapper>
-        <Suspense fallback={<LoadingFallback />}>
-          <StudentDashboardHub />
-        </Suspense>
-      </AppLayoutWrapper>
-    );
-  } else {
-    return (
-      <AppLayoutWrapper>
-        <Suspense fallback={<LoadingFallback />}>
-          <CounselorDashboardHub />
-        </Suspense>
-      </AppLayoutWrapper>
-    );
-  }
-}
-
-
-export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </ThemeProvider>
+    <Suspense fallback={<AppLayoutWrapper><LoadingFallback /></AppLayoutWrapper>}>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        
+        <Route path="/login" element={
+          <AppLayoutWrapper>
+            <LoginScreen />
+          </AppLayoutWrapper>
+        } />
+        
+        <Route path="/counselor/login" element={
+          <AppLayoutWrapper>
+            <CounselorLoginScreen />
+          </AppLayoutWrapper>
+        } />
+        
+        <Route path="/student/dashboard/*" element={
+          <RequireAuth role="student">
+            <AppLayoutWrapper>
+              <StudentDashboardHub />
+            </AppLayoutWrapper>
+          </RequireAuth>
+        } />
+        
+        <Route path="/counselor/dashboard/*" element={
+          <RequireAuth role="counselor">
+            <AppLayoutWrapper>
+              <CounselorDashboardHub />
+            </AppLayoutWrapper>
+          </RequireAuth>
+        } />
+        
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <ErrorBoundary>
+            <GlobalNotifications />
+            <Router>
+              <AppRoutes />
+            </Router>
+          </ErrorBoundary>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}

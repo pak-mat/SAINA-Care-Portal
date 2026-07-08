@@ -1,43 +1,110 @@
-// File: src/context/AuthContext.jsx
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getSession, clearSession, getAllRequests } from '../services/localEngine';
-import { useDatabaseEvent } from '../hooks/useDatabaseEvent';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
+import { User } from '@supabase/supabase-js';
 
-const AuthContext = createContext(null);
+// We fetch the extended user profile from the public.users table
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  studentid?: string;
+  status?: string;
+  preferences?: any;
+  form?: string;
+  gender?: string;
+  age?: string;
+  risklevel?: string;
+  account_status?: string;
+  guardian_name?: string;
+  emergency_contact?: string;
+  assigned_counselor?: string;
+  bio?: string;
+  avatar_color?: string;
+  banner_style?: string;
+  bannerStyle?: string;
+  interests?: string[];
+  social_handles?: any;
+  socialHandles?: any;
+}
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [requests, setRequests] = useState([]);
+const AuthContext = createContext<any>(null);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loadingApp, setLoadingApp] = useState(true);
 
-  useEffect(() => {
-    const sessionUser = getSession();
-    if (sessionUser) setUser(sessionUser);
+  // Helper to resolve role from auth session (app_metadata first, then user_metadata)
+  const resolveRole = (sessionUser: User): string => {
+    return sessionUser.app_metadata?.role
+      || sessionUser.user_metadata?.role
+      || 'student';
+  };
+
+  // Helper to fetch the extended profile
+  const fetchProfile = async (sessionUser: User) => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', sessionUser.id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user profile:', error);
+      // Fallback to minimal user metadata if profile fetch fails
+      setUser({
+        id: sessionUser.id,
+        email: sessionUser.email!,
+        name: sessionUser.user_metadata?.name || sessionUser.email || '',
+        role: resolveRole(sessionUser),
+      });
+    } else if (data) {
+      // Map snake_case db fields to camelCase for backwards compatibility
+      setUser({
+        ...data,
+        bannerStyle: data.banner_style || data.bannerStyle,
+        socialHandles: data.social_handles || data.socialHandles,
+      } as UserProfile);
+    }
     setLoadingApp(false);
+  };
+
+  useEffect(() => {
+    // Check active session on load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchProfile(session.user);
+      } else {
+        setUser(null);
+        setLoadingApp(false);
+      }
+    });
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        fetchProfile(session.user);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleDbUpdate = React.useCallback(() => {
-    if (user) setRequests(getAllRequests());
-  }, [user]);
-
-  useEffect(() => {
-    handleDbUpdate();
-  }, [handleDbUpdate]);
-
-  useDatabaseEvent('db_updated', handleDbUpdate);
-
-  const login = (u) => setUser(u);
-  const logout = () => {
-    clearSession();
+  const login = (u: any) => setUser(u);
+  
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
   };
 
-  const updateUser = (u) => {
+  const updateUser = (u: any) => {
     setUser(u);
   };
 
   return (
-    <AuthContext.Provider value={{ user, requests, loadingApp, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loadingApp, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

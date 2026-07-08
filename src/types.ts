@@ -16,6 +16,14 @@ export interface User {
   interests?: string[];
   socialHandles?: { linkedIn?: string; twitter?: string; instagram?: string; website?: string };
   preferences?: { uiSound?: boolean; notificationsEnabled?: boolean; availableDays?: number[]; availableSlots?: string[]; availabilitySchedule?: Record<number, string[]> };
+  form?: string;
+  gender?: string;
+  age?: string;
+  riskLevel?: 'Low' | 'Medium' | 'High' | 'Crisis';
+  account_status?: 'Active' | 'Suspended' | 'Graduated' | 'Archived';
+  guardian_name?: string;
+  emergency_contact?: string;
+  assigned_counselor?: string;
 }
 
 export interface BaseRequest {

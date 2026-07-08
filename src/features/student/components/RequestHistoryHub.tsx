@@ -59,61 +59,68 @@ export default function RequestHistoryHub({ requests }: any) {
   };
 
   return (
-    <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}} className="w-full">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-zinc-100">Request History</h2>
-          <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">Review the status of your past counseling appointments and transfer requests.</p>
+    <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}} className="w-full max-w-6xl mx-auto pb-12 font-sans" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+      
+      {/* Hero Banner */}
+      <div className="mb-8 overflow-hidden bg-gradient-to-r from-emerald-900 to-slate-900 dark:from-emerald-950 dark:to-black rounded-[1.75rem] p-8 sm:p-10 relative shadow-lg">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 opacity-20 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/4 pointer-events-none"></div>
+        <div className="relative z-10">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2 tracking-tight">Request History</h2>
+          <p className="text-emerald-100/80 text-sm font-medium max-w-lg">
+            Review the status of your past counseling appointments and transfer requests.
+          </p>
         </div>
       </div>
       
       {requests.length === 0 ? (
-        <div className="bg-white dark:bg-zinc-800 rounded-xl border border-slate-200 dark:border-zinc-700 p-16 text-center shadow-sm">
-          <Clock size={48} className="mx-auto text-slate-300 dark:text-zinc-600 mb-4" />
-          <h3 className="text-lg font-semibold text-slate-700 dark:text-zinc-300">No requests found</h3>
-          <p className="text-slate-500 dark:text-zinc-500 mt-2">You haven't submitted any requests yet.</p>
+        <div className="glass-panel p-16 text-center shadow-sm">
+          <div className="w-24 h-24 mx-auto bg-slate-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-6 shadow-inner border border-slate-200 dark:border-zinc-700">
+            <Clock size={40} className="text-slate-400 dark:text-zinc-500" />
+          </div>
+          <h3 className="text-2xl font-bold text-slate-800 dark:text-zinc-200 tracking-tight mb-2">No requests found</h3>
+          <p className="text-slate-500 dark:text-zinc-400">You haven't submitted any requests yet. Use the Quick Actions on your dashboard to get started.</p>
         </div>
       ) : (
-        <div className="bg-white dark:bg-zinc-800 rounded-xl border border-slate-200 dark:border-zinc-700 shadow-sm overflow-hidden">
-          <div className="hidden md:grid grid-cols-12 gap-4 p-4 border-b border-slate-100 dark:border-zinc-700/50 bg-slate-50 dark:bg-zinc-900/50 text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
-            <div className="col-span-4 pl-2">Request Subject</div>
+        <div className="glass-panel shadow-sm overflow-hidden">
+          <div className="hidden md:grid grid-cols-12 gap-4 p-5 border-b border-white/50 dark:border-zinc-800/50 bg-slate-50/50 dark:bg-zinc-900/50 text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+            <div className="col-span-4 pl-3">Request Subject</div>
             <div className="col-span-3">Submitted On</div>
             <div className="col-span-3">Status</div>
-            <div className="col-span-2 text-right pr-2">Action</div>
+            <div className="col-span-2 text-right pr-3">Action</div>
           </div>
           
-          <div className="divide-y divide-slate-100 dark:divide-zinc-700/50">
+          <div className="divide-y divide-slate-100 dark:divide-zinc-800/50">
             {requests.slice().reverse().map((req: any) => (
               <div key={req.id} className="transition-colors duration-300">
                 <div 
-                  className={`p-4 md:p-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-700/30 transition-colors ${expandedId === req.id ? 'bg-slate-50 dark:bg-zinc-700/30' : ''}`}
+                  className={`p-4 md:p-0 cursor-pointer hover:bg-white/80 dark:hover:bg-zinc-800/50 transition-colors ${expandedId === req.id ? 'bg-white dark:bg-zinc-800/30' : ''}`}
                   onClick={() => setExpandedId(expandedId === req.id ? null : req.id)}
                 >
-                  <div className="md:grid md:grid-cols-12 gap-4 items-center p-0 md:p-4">
-                    <div className="col-span-4 flex items-center gap-3 mb-2 md:mb-0 pl-0 md:pl-2">
-                       <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center border border-slate-200 dark:border-zinc-700">
+                  <div className="md:grid md:grid-cols-12 gap-4 items-center p-0 md:p-5">
+                    <div className="col-span-4 flex items-center gap-4 mb-3 md:mb-0 pl-0 md:pl-3">
+                       <div className="w-10 h-10 rounded-[1rem] bg-slate-50 dark:bg-zinc-800 flex items-center justify-center border border-slate-200 dark:border-zinc-700 shadow-sm">
                          {getIcon(req.type)}
                        </div>
                        <div>
-                         <p className="font-semibold text-slate-900 dark:text-zinc-100 capitalize">{req.type}</p>
-                         <p className="text-xs text-slate-500 dark:text-zinc-400 md:hidden block mt-0.5">Submitted: {new Date(req.submissionDate).toLocaleDateString()}</p>
+                         <p className="font-bold text-slate-900 dark:text-zinc-100 capitalize text-base">{req.type}</p>
+                         <p className="text-xs font-medium text-slate-500 dark:text-zinc-400 md:hidden block mt-0.5">Submitted: {new Date(req.submissionDate).toLocaleDateString()}</p>
                        </div>
                     </div>
                     
-                    <div className="col-span-3 hidden md:block text-sm text-slate-600 dark:text-zinc-400">
+                    <div className="col-span-3 hidden md:block text-sm font-medium text-slate-600 dark:text-zinc-400">
                       {new Date(req.submissionDate).toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' })}
                     </div>
                     
-                    <div className="col-span-3 mb-3 md:mb-0">
-                      <span className={`inline-flex px-3 py-1 rounded-full border text-xs font-bold ${getStatusColor(req.status)}`}>
+                    <div className="col-span-3 mb-4 md:mb-0">
+                      <span className={`inline-flex px-3 py-1 rounded-full border shadow-sm text-xs font-bold uppercase tracking-wide ${getStatusColor(req.status)}`}>
                         {req.status}
                       </span>
                     </div>
                     
-                    <div className="col-span-2 flex justify-start md:justify-end pr-0 md:pr-2">
-                      <div className="flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400 group">
-                        {expandedId === req.id ? 'Hide Details' : 'View Details'}
-                        <ChevronRight size={16} className={`transition-transform flex-shrink-0 ${expandedId === req.id ? 'rotate-90' : 'group-hover:translate-x-1'}`} />
+                    <div className="col-span-2 flex justify-start md:justify-end pr-0 md:pr-3">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 group uppercase tracking-wider bg-slate-50 dark:bg-zinc-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700">
+                        {expandedId === req.id ? 'Hide' : 'View'}
+                        <ChevronRight size={14} className={`transition-transform flex-shrink-0 ${expandedId === req.id ? 'rotate-90 text-emerald-500' : 'group-hover:translate-x-1'}`} />
                       </div>
                     </div>
                   </div>
@@ -125,39 +132,39 @@ export default function RequestHistoryHub({ requests }: any) {
                       initial={{ height: 0, opacity: 0 }} 
                       animate={{ height: 'auto', opacity: 1 }} 
                       exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden border-t border-slate-100 dark:border-zinc-700 bg-slate-50/50 dark:bg-zinc-900/50"
+                      className="overflow-hidden border-t border-slate-100 dark:border-zinc-800/50 bg-slate-50/80 dark:bg-zinc-900/80 shadow-inner"
                     >
                       <div className="p-6 md:p-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           {/* Details Column */}
-                          <div className="space-y-4 text-sm">
-                            <h4 className="font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wide text-xs border-b border-slate-200 dark:border-zinc-700 pb-2">Submission Data</h4>
+                          <div className="space-y-5 text-sm">
+                            <h4 className="font-black text-slate-900 dark:text-zinc-100 uppercase tracking-widest text-xs border-b border-slate-200 dark:border-zinc-700 pb-2">Submission Data</h4>
                             {req.type === 'appointment' && (
-                              <div className="space-y-3">
-                                <div><span className="text-slate-500 dark:text-zinc-400 block mb-0.5">Reason Category:</span> <span className="font-medium text-slate-800 dark:text-zinc-200">{req.reasonCategory}</span></div>
+                              <div className="space-y-4">
+                                <div><span className="text-slate-500 dark:text-zinc-400 block mb-1 uppercase text-[10px] font-bold tracking-wider">Reason Category:</span> <span className="font-bold text-slate-800 dark:text-zinc-200 bg-white dark:bg-zinc-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700">{req.reasonCategory}</span></div>
                                 {req.scheduledAt && (
-                                  <div><span className="text-emerald-600 dark:text-emerald-400 font-bold block mb-0.5">Final Scheduled Appointment:</span> <span className="inline-block bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800 font-bold uppercase tracking-wide text-sm">{new Date(req.scheduledAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+                                  <div><span className="text-emerald-600 dark:text-emerald-400 font-bold block mb-1 uppercase text-[10px] tracking-wider">Final Scheduled Appointment:</span> <span className="inline-block bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800 font-bold uppercase tracking-wide text-sm shadow-sm">{new Date(req.scheduledAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
                                 )}
-                                <div><span className="text-slate-500 dark:text-zinc-400 block mb-0.5">Requested Dates:</span> 
-                                  <ul className="list-disc list-inside font-medium text-slate-800 dark:text-zinc-200 mt-1">
-                                    <li>{req.choice1}</li>
-                                    {req.choice2 && <li>{req.choice2}</li>}
-                                    {req.choice3 && <li>{req.choice3}</li>}
+                                <div><span className="text-slate-500 dark:text-zinc-400 block mb-1 uppercase text-[10px] font-bold tracking-wider">Requested Dates:</span> 
+                                  <ul className="space-y-1.5 mt-1 font-medium">
+                                    <li className="bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-slate-800 dark:text-zinc-200 shadow-sm">{req.choice1}</li>
+                                    {req.choice2 && <li className="bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-slate-800 dark:text-zinc-200 shadow-sm">{req.choice2}</li>}
+                                    {req.choice3 && <li className="bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-slate-800 dark:text-zinc-200 shadow-sm">{req.choice3}</li>}
                                   </ul>
                                 </div>
                                 <div>
-                                  <span className="text-slate-500 dark:text-zinc-400 block mb-1">Context / Details:</span>
-                                  <div className="bg-white dark:bg-zinc-900 p-4 rounded-lg border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300">{req.details}</div>
+                                  <span className="text-slate-500 dark:text-zinc-400 block mb-1 uppercase text-[10px] font-bold tracking-wider">Context / Details:</span>
+                                  <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 shadow-sm leading-relaxed">{req.details}</div>
                                 </div>
                               </div>
                             )}
                             
                             {req.type === 'permission' && (
-                              <div className="space-y-3">
-                                <div><span className="text-slate-500 dark:text-zinc-400 block mb-0.5">Target School:</span> <span className="font-medium text-slate-800 dark:text-zinc-200">{req.targetSchool}</span></div>
+                              <div className="space-y-4">
+                                <div><span className="text-slate-500 dark:text-zinc-400 block mb-1 uppercase text-[10px] font-bold tracking-wider">Target School:</span> <span className="font-bold text-slate-800 dark:text-zinc-200 bg-white dark:bg-zinc-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700">{req.targetSchool}</span></div>
                                 <div>
-                                  <span className="text-slate-500 dark:text-zinc-400 block mb-1">Reason for Transfer:</span>
-                                  <div className="bg-white dark:bg-zinc-900 p-4 rounded-lg border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300">{req.reason}</div>
+                                  <span className="text-slate-500 dark:text-zinc-400 block mb-1 uppercase text-[10px] font-bold tracking-wider">Reason for Transfer:</span>
+                                  <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 shadow-sm leading-relaxed">{req.reason}</div>
                                 </div>
                               </div>
                             )}
@@ -166,29 +173,29 @@ export default function RequestHistoryHub({ requests }: any) {
                             {/* Feedback Column */}
                           <div className="space-y-4">
                              <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-700 pb-2">
-                               <h4 className="font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wide text-xs">Counselor Feedback</h4>
+                               <h4 className="font-black text-slate-900 dark:text-zinc-100 uppercase tracking-widest text-xs">Counselor Feedback</h4>
                                {(req.status === 'approved' || req.status === 'completed' || !!req.counselorNotes) && (
                                  <button 
                                    onClick={(e) => { e.stopPropagation(); downloadSummary(req); }}
-                                   className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded border border-emerald-100 dark:border-emerald-800/50"
+                                   className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg border border-emerald-200/50 dark:border-emerald-800/50 uppercase tracking-wider"
                                    title="Download session notes summary"
                                  >
-                                   <Download size={14} /> Download Summary
+                                   <Download size={12} /> Download
                                  </button>
                                )}
                              </div>
                              {req.counselorNotes ? (
-                               <div className="bg-emerald-50 dark:bg-emerald-900/20 p-5 rounded-lg border border-emerald-100 dark:border-emerald-800/50 shadow-sm">
+                               <div className="bg-emerald-50 dark:bg-emerald-900/20 p-5 rounded-[1.25rem] border border-emerald-100 dark:border-emerald-800/50 shadow-sm">
                                  <div className="flex items-center gap-2 mb-3">
                                     <CheckCircle2 className="text-emerald-500" size={18} />
                                     <span className="font-bold text-emerald-900 dark:text-emerald-100">Reviewed by {req.resolvedByName}</span>
                                  </div>
-                                 <p className="text-sm text-emerald-800 dark:text-emerald-200 leading-relaxed border-l-2 border-emerald-300 dark:border-emerald-700 pl-3">
+                                 <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200 leading-relaxed border-l-2 border-emerald-300 dark:border-emerald-700 pl-4 bg-white/40 dark:bg-zinc-900/40 p-3 rounded-r-lg">
                                    {req.counselorNotes}
                                  </p>
                                </div>
                              ) : (
-                               <div className="h-full min-h-[100px] flex items-center justify-center bg-slate-50 dark:bg-zinc-900/30 rounded-lg border border-dashed border-slate-200 dark:border-zinc-700 p-6 text-center text-slate-400 dark:text-zinc-500 text-sm">
+                               <div className="h-full min-h-[120px] flex items-center justify-center bg-slate-100/50 dark:bg-zinc-900/30 rounded-[1.25rem] border border-dashed border-slate-300 dark:border-zinc-700 p-6 text-center text-slate-500 dark:text-zinc-500 text-sm font-medium shadow-inner">
                                  No official feedback provided yet. Your request is currently {req.status}.
                                </div>
                              )}

@@ -2,16 +2,29 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { UploadCloud, FileText, CheckCircle, HelpCircle } from 'lucide-react';
-import { createSchoolTransfer } from '../../../services/localEngine';
+
+import { supabase } from '../../../lib/supabase';
 
 export default function PermissionForm({ onDone, user }: any) {
   const [targetSchool, setTargetSchool] = useState('');
   const [reason, setReason] = useState('');
 
-  const submit = (e: any) => {
+  const submit = async (e: any) => {
     e.preventDefault();
-    createSchoolTransfer({ targetSchool, reason, transferFormsFile: 'attached_form.pdf', academicRecordsFile: 'attached_records.pdf', idDocumentsFile: 'attached_id.pdf', studentId: user.id, studentName: user.name });
-    onDone();
+    const { error } = await supabase.from('school_transfers').insert({
+      studentid: user.id,
+      target_school: targetSchool,
+      reason_category: 'Other',
+      detailed_reason: reason,
+      status: 'pending'
+    });
+    
+    if (!error) {
+      onDone();
+    } else {
+      console.error("Error creating transfer request:", error);
+      alert("Failed to submit request.");
+    }
   };
 
   return (

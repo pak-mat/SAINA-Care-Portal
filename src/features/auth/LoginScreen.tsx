@@ -1,245 +1,294 @@
-// File: src/features/auth/LoginScreen.jsx
-import React, { useState } from 'react';
-import { Loader2 } from 'lucide-react';
-import { loginUser, registerUser, bypassDemoStudent, bypassDemoCounselor } from '../../services/localEngine';
+// File: src/features/auth/LoginScreen.tsx
+import React, { useState, useEffect } from 'react';
+import { Loader2, ShieldCheck, BookOpen, MessageCircleHeart, Calendar, ArrowRight, Sparkles } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
+
+const FEATURES = [
+  { icon: ShieldCheck, title: 'Secure & Confidential', desc: 'End-to-end encrypted sessions between you and your counselor.' },
+  { icon: MessageCircleHeart, title: 'Real-Time Support', desc: 'Chat directly with your assigned counselor anytime.' },
+  { icon: Calendar, title: 'Easy Scheduling', desc: 'Book appointments with just a few taps on the calendar.' },
+  { icon: BookOpen, title: 'Personal Vault', desc: 'Store your journal entries and resources privately.' },
+];
 
 export default function LoginScreen() {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
-  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [studentId, setStudentId] = useState('');
+  const [form, setForm] = useState('');
+  const [activeFeature, setActiveFeature] = useState(0);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    
-    setTimeout(async () => {
-      try {
-        if (isRegistering) {
-          if (!fullName || !email || !password || !studentId) throw new Error('Please fill out all fields.');
-          const user = await registerUser(fullName, email, studentId, password);
-          setIsFadingOut(true);
-          setTimeout(() => login(user), 400); 
-        } else {
-          if (!email || !password) throw new Error('Please enter email and password.');
-          const user = await loginUser(email, password);
-          if (!user) throw new Error('Invalid credentials or user not found.');
-          setIsFadingOut(true);
-          setTimeout(() => login(user), 400); 
-        }
-      } catch (err: any) {
-        setError(err.message || 'An error occurred.');
-      } finally {
-        setLoading(false);
-      }
-    }, 500); 
-  };
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'student') navigate('/student/dashboard', { replace: true });
+      else navigate('/counselor/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
-  const handleOAuthLogin = async (provider: 'google' | 'moe') => {
-    setLoading(true);
-    setError('');
-    
-    // Simulate OAuth redirect & connection wait time
-    setTimeout(async () => {
-      try {
-        const user = await bypassDemoStudent();
-        setIsFadingOut(true);
-        setTimeout(() => login(user), 400); 
-      } catch (err) {
-        setError(`Error authenticating with ${provider === 'google' ? 'Google' : 'DELIMa'}.`);
-        setLoading(false);
-      }
-    }, 1200);
-  };
+  // Auto-rotate feature cards
+  useEffect(() => {
+    const t = setInterval(() => setActiveFeature(p => (p + 1) % FEATURES.length), 3000);
+    return () => clearInterval(t);
+  }, []);
 
-  const handleDemoStudent = async () => {
+  const doLogin = async (fn: () => Promise<any>) => {
     setLoading(true);
     setError('');
     try {
-      const user = await bypassDemoStudent();
-      setIsFadingOut(true);
-      setTimeout(() => login(user), 400); 
-    } catch (err) {
-      setError('Error logging in as demo student.');
+      await fn();
+      // Keep loading true while context fetches profile and navigates
+    } catch (err: any) {
+      setError(err.message || 'An error occurred.');
       setLoading(false);
     }
   };
 
-  const handleDemoCounselor = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const user = await bypassDemoCounselor();
-      setIsFadingOut(true);
-      setTimeout(() => login(user), 400); 
-    } catch (err) {
-      setError('Error logging in as demo counselor.');
-      setLoading(false);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isRegistering) {
+      if (!fullName || !email || !password || !studentId) { setError('Please fill out all fields.'); return; }
+      doLogin(async () => {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name: fullName,
+              studentId,
+              form: form || null,
+              role: 'student'
+            }
+          }
+        });
+        if (error) throw error;
+        
+        if (!data.session) {
+          // signUp succeeded but no session = email confirmation required
+          setLoading(false);
+          setError('Sign up successful! Please check your email to verify your account before logging in.');
+          setIsRegistering(false);
+        }
+      });
+    } else {
+      if (!email || !password) { setError('Please enter email and password.'); return; }
+      doLogin(async () => {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      });
     }
   };
 
   return (
     <AnimatePresence>
-      {!isFadingOut && (
-        <motion.div 
-          className="min-h-screen relative flex items-center justify-center bg-[#eefaf7] p-4 overflow-hidden font-sans transition-colors duration-300"
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.4 }}
-          style={{ fontFamily: 'Inter, sans-serif' }}
-        >
-          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            {/* Top Right Circle */}
-            <div className="absolute right-[-5%] top-[-5%] w-48 sm:w-[250px] h-48 sm:h-[250px] rounded-full bg-gradient-to-br from-[#1dd88b] to-[#04a05b] opacity-90 shadow-2xl blur-[0.5px]"></div>
-            {/* Bottom Left Circle */}
-            <div className="absolute left-[-10%] sm:left-[-5%] bottom-[-5%] w-56 sm:w-[280px] h-56 sm:h-[280px] rounded-full bg-gradient-to-tr from-[#029553] to-[#25df95] opacity-90 shadow-2xl blur-[0.5px]"></div>
-            {/* Right Middle shape piece */}
-            <div className="absolute right-[-5%] top-[50%] w-[80px] h-[120px] rounded-l-full bg-gradient-to-b from-[#1cdb8b] to-[#049d5b] opacity-80 backdrop-blur-sm -translate-y-1/2"></div>
-            {/* Small horizontal pill protruding */}
-            <div className="absolute right-[20px] sm:right-[50px] top-[50%] w-[70px] h-[16px] rounded-l-full bg-[#10b981] opacity-70 backdrop-blur-sm -translate-y-1/2"></div>
+      <motion.div
+        className="min-h-screen flex font-sans relative overflow-hidden"
+        exit={{ opacity: 0, scale: 0.98 }}
+        transition={{ duration: 0.35 }}
+      >
+          {/* Animated Background Gradients & Orbs for Premium feel */}
+          <div className="absolute inset-0 z-0 bg-gradient-to-br from-slate-50 via-emerald-50 to-slate-100 dark:from-[#022c22] dark:via-[#064e3b] dark:to-[#0f172a]" />
+          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+            <motion.div animate={{ scale: [1,1.15,1], opacity:[0.1,0.2,0.1] }} transition={{ duration: 8, repeat: Infinity, ease:'easeInOut' }}
+              className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-emerald-400 rounded-full blur-[140px]" />
+            <motion.div animate={{ scale: [1,1.2,1], opacity:[0.05,0.15,0.05] }} transition={{ duration: 11, repeat: Infinity, ease:'easeInOut', delay:2 }}
+              className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-teal-300 rounded-full blur-[120px]" />
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNCkiLz48L3N2Zz4=')] opacity-40 dark:opacity-20" />
           </div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-[20rem] sm:max-w-[22rem] w-full relative z-10 px-2 sm:px-0"
-          >
-            <div className="flex flex-col items-center mx-auto mb-5 text-center">
-              <span className="text-[#0eaf72] text-[9px] font-bold tracking-[0.25em] mb-1.5 uppercase">SAINA CARE STUDENT</span>
-              <h1 className="text-xl sm:text-2xl font-extrabold text-[#111827] tracking-tight">Student Portal</h1>
+          {/* ── LEFT CONTENT (Text/Features) ── */}
+          <div className="hidden lg:flex flex-col justify-center w-[50%] relative z-10 p-12 xl:p-20">
+            {/* Logo + Brand */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 rounded-xl flex items-center justify-center shadow-inner">
+                  <Sparkles size={20} className="text-emerald-500 dark:text-emerald-400" />
+                </div>
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm tracking-widest uppercase">SAINA Care</span>
+              </div>
+              <h1 className="text-5xl xl:text-6xl font-black text-slate-900 dark:text-white leading-[1.1] tracking-tight mt-6">
+                Your wellbeing<br />
+                <span className="text-emerald-500 dark:text-emerald-400">starts here.</span>
+              </h1>
+              <p className="text-slate-600 dark:text-emerald-100/60 mt-6 text-lg leading-relaxed max-w-md font-medium">
+                A safe, confidential portal connecting students with professional counselors at your school.
+              </p>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-2xl rounded-2xl shadow-[0_8px_32px_0_rgba(25,160,115,0.08)] border border-white p-5 sm:p-6 mb-6 relative">
-               <form onSubmit={handleSubmit} className="relative z-10 space-y-4">
-                 {/* Social Buttons */}
-                 <div className="space-y-3">
-                   <button 
-                     type="button" 
-                     onClick={() => handleOAuthLogin('google')}
-                     disabled={loading}
-                     className="w-full flex items-center justify-center gap-2.5 bg-white text-slate-700 py-2.5 rounded-lg text-[13px] font-bold shadow-sm hover:bg-slate-50 transition-colors disabled:opacity-70"
-                   >
-                     {loading ? <Loader2 className="w-4 h-4 animate-spin text-slate-400" /> : <span className="text-[#4285F4] font-extrabold text-[15px] leading-none">G</span>}
-                     {loading ? 'Connecting...' : 'Continue with Google'}
-                   </button>
-                   
-                   <button 
-                     type="button" 
-                     onClick={() => handleOAuthLogin('moe')}
-                     disabled={loading}
-                     className="w-full flex items-center justify-center bg-gradient-to-r from-[#6b46f0] to-[#b360f0] text-white py-2.5 rounded-lg text-[13px] font-bold shadow-md hover:opacity-90 transition-opacity disabled:opacity-70"
-                   >
-                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sign In via DELIMa (MOE)'}
-                   </button>
-                 </div>
-
-                 <div className="flex flex-row items-center gap-3 text-[9px] font-bold text-slate-300 uppercase tracking-widest pt-1 pb-1">
-                   <div className="flex-1 border-t border-slate-200"></div>
-                   <span>OR CONNECT VIA EMAIL</span>
-                   <div className="flex-1 border-t border-slate-200"></div>
-                 </div>
-
-                 {/* Inputs */}
-                 <div className="space-y-3">
-                   {isRegistering && (
-                     <>
-                       <div>
-                         <input 
-                           type="text" 
-                           value={fullName}
-                           onChange={(e) => setFullName(e.target.value)}
-                           className="w-full bg-white/60 border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-medium text-slate-800 outline-none focus:bg-white focus:border-[#0eaf72] focus:ring-2 focus:ring-[#0eaf72]/20 transition-all placeholder:text-slate-400 shadow-sm"
-                           placeholder="Full Name"
-                         />
-                       </div>
-                       <div>
-                         <input 
-                           type="text" 
-                           value={studentId}
-                           onChange={(e) => setStudentId(e.target.value)}
-                           className="w-full bg-white/60 border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-medium text-slate-800 outline-none focus:bg-white focus:border-[#0eaf72] focus:ring-2 focus:ring-[#0eaf72]/20 transition-all placeholder:text-slate-400 shadow-sm"
-                           placeholder="Student ID"
-                         />
-                       </div>
-                     </>
-                   )}
-                   <div>
-                     <input 
-                       type="email" 
-                       value={email}
-                       onChange={(e) => setEmail(e.target.value)}
-                       className="w-full bg-white/60 border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-medium text-slate-800 outline-none focus:bg-white focus:border-[#0eaf72] focus:ring-2 focus:ring-[#0eaf72]/20 transition-all placeholder:text-slate-400 shadow-sm"
-                       placeholder="Email address"
-                     />
-                   </div>
-                   <div>
-                     <input 
-                       type="password" 
-                       value={password}
-                       onChange={(e) => setPassword(e.target.value)}
-                       className="w-full bg-white/60 border border-slate-200 rounded-lg px-3.5 py-2.5 text-[13px] font-medium text-slate-800 outline-none focus:bg-white focus:border-[#0eaf72] focus:ring-2 focus:ring-[#0eaf72]/20 transition-all placeholder:text-slate-400 shadow-sm"
-                       placeholder="Password"
-                     />
-                   </div>
-                 </div>
-
-                 <AnimatePresence>
-                   {error && (
-                     <motion.div 
-                       initial={{ opacity: 0, height: 0 }}
-                       animate={{ opacity: 1, height: 'auto' }}
-                       exit={{ opacity: 0, height: 0 }}
-                       className="overflow-hidden"
-                     >
-                       <div className="text-red-500 text-xs font-bold text-center mt-2">
-                         {error}
-                       </div>
-                     </motion.div>
-                   )}
-                 </AnimatePresence>
-
-                 {/* Action Buttons */}
-                 <div className="flex items-center gap-3 pt-3">
-                   <button 
-                     type="button"
-                     onClick={() => setIsRegistering(!isRegistering)}
-                     className="flex-[1] bg-white text-slate-800 py-2.5 rounded-lg text-[13px] font-bold shadow-sm transition-all hover:bg-slate-50 text-center border border-slate-100"
-                   >
-                     {isRegistering ? 'Login Instead' : 'Sign Up'}
-                   </button>
-                   <button 
-                     type="submit"
-                     disabled={loading}
-                     className="flex-[1.2] bg-[#0eaa70] text-white py-2.5 rounded-lg text-[13px] font-bold shadow-md transition-all hover:bg-[#0d9964] flex items-center justify-center disabled:opacity-70"
-                   >
-                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isRegistering ? 'Register' : 'Login')}
-                   </button>
-                 </div>
-               </form>
+            {/* Feature showcase */}
+            <div className="space-y-4 mt-12 max-w-md">
+              {FEATURES.map((f, i) => {
+                const Icon = f.icon;
+                const isActive = i === activeFeature;
+                return (
+                  <motion.div
+                    key={i}
+                    onClick={() => setActiveFeature(i)}
+                    animate={{ opacity: isActive ? 1 : 0.6, x: isActive ? 0 : -4 }}
+                    transition={{ duration: 0.3 }}
+                    className={`flex items-start gap-5 p-5 rounded-2xl cursor-pointer transition-all ${isActive ? 'glass-card' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${isActive ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30' : 'bg-black/5 dark:bg-white/5'}`}>
+                      <Icon size={18} className={isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-white/40'} />
+                    </div>
+                    <div>
+                      <p className={`text-sm font-bold ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-white/50'}`}>{f.title}</p>
+                      <AnimatePresence>
+                        {isActive && (
+                          <motion.p initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} exit={{ opacity:0, height:0 }}
+                            className="text-sm text-slate-600 dark:text-emerald-100/70 leading-relaxed mt-1 overflow-hidden font-medium">
+                            {f.desc}
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                    {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 mt-2 shrink-0 animate-pulse" />}
+                  </motion.div>
+                );
+              })}
             </div>
 
-            <div className="flex flex-col items-center gap-2 mt-6 text-[#0eaa70]/60 text-[10px] sm:text-xs font-semibold tracking-wide">
-               <button onClick={handleDemoStudent} disabled={loading} className="hover:text-[#0eaa70] transition-colors leading-none outline-none">
-                  Dev: Bypass as Student
-               </button>
+            {/* Bottom trust badges */}
+            <div className="flex items-center gap-6 mt-16">
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-white/40 font-bold uppercase tracking-wider">
+                <ShieldCheck size={14} className="text-emerald-600/70 dark:text-emerald-500/60" /> End-to-End Encrypted
+              </div>
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-white/10" />
+              <div className="text-xs text-slate-500 dark:text-white/40 font-bold uppercase tracking-wider">MOE Endorsed</div>
             </div>
+          </div>
 
-            <div className="mt-8 text-center">
-              <a href="/counselor" className="text-slate-500 hover:text-slate-700 text-xs font-medium transition-colors">
-                Staff & Counselors Login &rarr;
-              </a>
-            </div>
-          </motion.div>
+          {/* ── RIGHT PANEL (Auth Form) ── */}
+          <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 relative z-10 w-full lg:w-[50%]">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: 'easeOut' }}
+              className="w-full max-w-[420px] glass-panel p-8 sm:p-10 shadow-2xl"
+            >
+              {/* Mobile logo */}
+              <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
+                <div className="w-10 h-10 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 rounded-xl flex items-center justify-center">
+                  <Sparkles size={20} className="text-emerald-500" />
+                </div>
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold tracking-widest uppercase">SAINA Care</span>
+              </div>
+
+              <div className="mb-8">
+                <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                  {isRegistering ? 'Create account' : 'Welcome back'}
+                </h2>
+                <p className="text-slate-500 dark:text-zinc-400 font-medium text-sm mt-2">
+                  {isRegistering ? 'Join your school counseling portal.' : 'Sign in to your student portal.'}
+                </p>
+              </div>
+
+              {/* OAuth Buttons (Removed as per user request to keep only the bottom small green bypass button) */}
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {isRegistering && (
+                  <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} className="space-y-4 overflow-hidden">
+                    <input
+                      type="text" value={fullName} onChange={e => setFullName(e.target.value)}
+                      maxLength={100} placeholder="Full name"
+                      className="w-full glass-input text-sm"
+                    />
+                    <input
+                      type="text" value={studentId} onChange={e => setStudentId(e.target.value)}
+                      maxLength={30} placeholder="Student ID / Registration No."
+                      className="w-full glass-input text-sm"
+                    />
+                    <select
+                      value={form} onChange={e => setForm(e.target.value)}
+                      className="w-full glass-input text-sm text-slate-500"
+                    >
+                      <option value="">Select Form (Optional)</option>
+                      <option value="1">Form 1</option>
+                      <option value="2">Form 2</option>
+                      <option value="3">Form 3</option>
+                      <option value="4">Form 4</option>
+                      <option value="5">Form 5</option>
+                    </select>
+                  </motion.div>
+                )}
+                <input
+                  type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  maxLength={254} placeholder="Email address"
+                  className="w-full glass-input text-sm"
+                />
+                <input
+                  type="password" value={password} onChange={e => setPassword(e.target.value)}
+                  maxLength={128} placeholder="Password"
+                  className="w-full glass-input text-sm"
+                />
+
+                <AnimatePresence>
+                  {error && (
+                    <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} exit={{ opacity:0, height:0 }} className="overflow-hidden">
+                      <div className="bg-red-50/80 backdrop-blur-md dark:bg-red-900/30 border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 text-xs font-bold px-4 py-3 rounded-xl shadow-sm">
+                        {error}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
+                    className="flex-[1] glass-input py-3 text-sm font-bold text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center cursor-pointer"
+                  >
+                    {isRegistering ? 'Login Instead' : 'Sign Up'}
+                  </button>
+                  <button
+                    type="submit" disabled={loading}
+                    className="flex-[1.5] glass-button py-3 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                  >
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                      <>
+                        {isRegistering ? 'Create Account' : 'Sign In'}
+                        <ArrowRight size={16} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              {/* Bypass */}
+              <div className="mt-10 pt-6 border-t border-slate-200 dark:border-white/10 flex flex-col items-center gap-3">
+                <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-widest">Dev Access</p>
+                <button
+                  type="button" 
+                  onClick={() => {
+                    doLogin(async () => {
+                      const { error } = await supabase.auth.signInWithPassword({ email: 'adam@demo.com', password: 'demo1234' });
+                      if (error) throw error;
+                    });
+                  }} 
+                  disabled={loading}
+                  className="text-emerald-600/80 hover:text-emerald-600 dark:text-emerald-400/70 dark:hover:text-emerald-400 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Bypass as Student
+                </button>
+              </div>
+
+              <div className="mt-6 text-center">
+                <a href="/counselor/login" className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200 text-xs font-bold transition-colors">
+                  Staff &amp; Counselors Login <ArrowRight size={12} />
+                </a>
+              </div>
+            </motion.div>
+          </div>
         </motion.div>
-      )}
     </AnimatePresence>
   );
 }

@@ -5,7 +5,9 @@ import {
   Calendar as CalendarIcon, Clock, CheckCircle, Info, ChevronLeft, 
   ChevronRight, User, Sparkles, Linkedin, Twitter, Instagram, Globe 
 } from 'lucide-react';
-import { createAppointment, getAllUsers } from '../../../services/localEngine';
+import { supabase } from '../../../lib/supabase';
+
+// Removed mock createAppointment
 
 export default function AppointmentForm({ onDone, user }: any) {
   const [category, setCategory] = useState('');
@@ -15,9 +17,20 @@ export default function AppointmentForm({ onDone, user }: any) {
   
   useEffect(() => {
     // Fetch all active counselors when the form loads
-    const allUsers = getAllUsers();
-    const activeCounselors = allUsers.filter(u => u.role === 'counselor' && u.status !== 'Away');
-    setCounselors(activeCounselors);
+    const fetchCounselors = async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('role', 'counselor')
+        .neq('status', 'Away');
+        
+      if (data && !error) {
+        setCounselors(data);
+      } else {
+        console.error("Error fetching counselors:", error);
+      }
+    };
+    fetchCounselors();
   }, []);
   
   // Calendar state
@@ -124,21 +137,42 @@ export default function AppointmentForm({ onDone, user }: any) {
     });
   };
 
-  const submit = (e: any) => {
+  const submit = async (e: any) => {
     e.preventDefault();
     if (!selectedDate || !selectedSlot) return;
     
-    const formattedDate = selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    const slotStr = `${formattedDate}, ${selectedSlot.time} with ${selectedSlot.counselor}`;
+    const formattedDate = selectedDate.toISOString().split('T')[0];
+    const counselor = counselors.find(c => c.name === selectedSlot.counselor);
     
-    createAppointment({ 
-      choice1: slotStr, 
-      reasonCategory: category, 
-      details, 
-      studentId: user.id, 
-      studentName: user.name 
+    // Combine date and time for scheduled_date
+    const timeParts = selectedSlot.time.match(/(\d+):(\d+)\s+(AM|PM)/);
+    let hours = 0;
+    let mins = 0;
+    if (timeParts) {
+      hours = parseInt(timeParts[1]);
+      mins = parseInt(timeParts[2]);
+      if (timeParts[3] === 'PM' && hours < 12) hours += 12;
+      if (timeParts[3] === 'AM' && hours === 12) hours = 0;
+    }
+    
+    const scheduledDate = new Date(selectedDate);
+    scheduledDate.setHours(hours, mins, 0, 0);
+
+    const { error } = await supabase.from('appointments').insert({
+      studentid: user.id,
+      counselorid: counselor ? counselor.id : null,
+      status: 'pending',
+      scheduled_date: scheduledDate.toISOString(),
+      topic_category: category,
+      private_notes: details
     });
-    onDone();
+    
+    if (!error) {
+      onDone();
+    } else {
+      console.error("Error creating appointment:", error);
+      alert("Failed to schedule appointment. Please try again.");
+    }
   };
 
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -146,25 +180,30 @@ export default function AppointmentForm({ onDone, user }: any) {
 
   return (
     <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}} className="w-full">
-      <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-slate-200 dark:border-zinc-700 overflow-hidden transition-colors duration-300">
+      <div className="glass-panel shadow-lg overflow-hidden transition-colors duration-300">
         <div className="flex flex-col lg:flex-row">
           
           {/* Left Column: Context & Calendar */}
-          <div className="lg:w-1/2 p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-zinc-700">
-            <div className="mb-6">
-               <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2 mb-2">
-                 <CalendarIcon className="text-emerald-500" size={22} />
+          <div className="lg:w-1/2 p-6 sm:p-10 border-b lg:border-b-0 lg:border-r border-slate-200/50 dark:border-zinc-800/50 relative">
+            {/* Background flourish */}
+            <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+            
+            <div className="mb-8 relative z-10">
+               <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-3 mb-3 tracking-tight">
+                 <div className="w-10 h-10 rounded-[1rem] bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center border border-emerald-100 dark:border-emerald-800/50 shadow-sm">
+                   <CalendarIcon className="text-emerald-500" size={20} />
+                 </div>
                  Select a Date
                </h2>
-               <p className="text-sm text-slate-500 dark:text-zinc-400">
+               <p className="text-sm font-medium text-slate-500 dark:text-zinc-400 max-w-md leading-relaxed">
                  Choose an available day on the calendar to see counselor availability. Green days have open slots.
                </p>
             </div>
 
             {/* Counselors Quick Profile Directory */}
-            <div className="mb-6 bg-slate-50 dark:bg-zinc-900/40 p-4 rounded-xl border border-slate-200 dark:border-zinc-700/50">
-              <h3 className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                <Sparkles size={11} className="text-emerald-500" />
+            <div className="mb-8 bg-slate-50/80 dark:bg-zinc-900/40 p-5 rounded-2xl border border-slate-200/50 dark:border-zinc-800/50 shadow-sm relative z-10">
+              <h3 className="text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Sparkles size={12} className="text-emerald-500" />
                 Featured Care Counselors
               </h3>
               <div className="flex flex-wrap gap-4">
@@ -200,26 +239,26 @@ export default function AppointmentForm({ onDone, user }: any) {
             </div>
 
             {/* Calendar UI */}
-            <div className="bg-slate-50 dark:bg-zinc-900 rounded-xl p-4 sm:p-5 border border-slate-200 dark:border-zinc-700/50">
+            <div className="bg-slate-50/80 dark:bg-zinc-900/60 backdrop-blur-md rounded-2xl p-5 sm:p-6 border border-slate-200/50 dark:border-zinc-800/50 shadow-sm relative z-10">
               <div className="flex justify-between items-center mb-6">
-                <button type="button" onClick={prevMonth} className="px-2 py-1.5 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-md transition-colors">
-                  <ChevronLeft size={20} className="text-slate-600 dark:text-zinc-400" />
+                <button type="button" onClick={prevMonth} className="p-2 hover:bg-white dark:hover:bg-zinc-800 rounded-xl shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-zinc-700 transition-all">
+                  <ChevronLeft size={18} className="text-slate-600 dark:text-zinc-400" />
                 </button>
-                <h3 className="text-slate-900 dark:text-zinc-100 font-semibold tracking-wide">
+                <h3 className="text-slate-900 dark:text-zinc-100 font-bold tracking-wide uppercase text-sm">
                   {monthNames[month]} {year}
                 </h3>
-                <button type="button" onClick={nextMonth} className="px-2 py-1.5 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-md transition-colors">
-                  <ChevronRight size={20} className="text-slate-600 dark:text-zinc-400" />
+                <button type="button" onClick={nextMonth} className="p-2 hover:bg-white dark:hover:bg-zinc-800 rounded-xl shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-zinc-700 transition-all">
+                  <ChevronRight size={18} className="text-slate-600 dark:text-zinc-400" />
                 </button>
               </div>
 
-              <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
+              <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-3">
                 {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
-                  <div key={d} className="text-center text-xs font-semibold text-slate-400 uppercase tracking-wider py-1">{d}</div>
+                  <div key={d} className="text-center text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest py-1">{d}</div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-7 gap-1 sm:gap-2 text-sm text-slate-700 dark:text-zinc-300">
+              <div className="grid grid-cols-7 gap-2 sm:gap-3 text-sm text-slate-700 dark:text-zinc-300">
                 <AnimatePresence mode="popLayout">
                   {generateDays().map((date, idx) => {
                     if (!date) return <div key={idx} className="p-2" />;
@@ -227,14 +266,14 @@ export default function AppointmentForm({ onDone, user }: any) {
                     const disabled = (isPast(date) && !isToday(date)) || !hasSlots;
                     const isSelected = selectedDate?.toDateString() === date.toDateString();
 
-                    let btnClass = "relative w-full h-10 sm:h-12 flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 ";
+                    let btnClass = "relative w-full h-10 sm:h-12 flex items-center justify-center rounded-xl font-bold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ";
                     
                     if (disabled) {
-                      btnClass += "text-slate-400 dark:text-zinc-600 cursor-not-allowed opacity-50 bg-slate-100 dark:bg-zinc-800/50 ";
+                      btnClass += "text-slate-400 dark:text-zinc-600 cursor-not-allowed opacity-40 bg-slate-100/50 dark:bg-zinc-800/30 ";
                     } else if (isSelected) {
-                      btnClass += "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 transform scale-[1.05] ";
+                      btnClass += "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 transform scale-[1.05] ";
                     } else {
-                      btnClass += "bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-900/40 dark:to-emerald-800/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50 shadow-sm hover:shadow-md hover:shadow-emerald-500/10 hover:-translate-y-0.5 hover:from-emerald-100 hover:to-emerald-200/50 dark:hover:from-emerald-800/50 dark:hover:to-emerald-700/30 ";
+                      btnClass += "bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 ";
                       if (isToday(date)) btnClass += "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-zinc-900 border-none ";
                     }
 
@@ -295,19 +334,19 @@ export default function AppointmentForm({ onDone, user }: any) {
           </div>
 
           {/* Right Column: details */}
-          <div className="lg:w-1/2 p-6 sm:p-8 bg-slate-50/50 dark:bg-zinc-900/30">
-            <form onSubmit={submit} className="space-y-6 h-full flex flex-col">
+          <div className="lg:w-1/2 p-6 sm:p-10 bg-slate-50/30 dark:bg-zinc-900/10 backdrop-blur-sm">
+            <form onSubmit={submit} className="space-y-8 h-full flex flex-col">
               
               <div>
-                <label className="block text-sm font-semibold text-slate-800 dark:text-zinc-200 mb-3">Topic Categories</label>
-                <div className="flex flex-wrap gap-2">
+                <label className="block text-[10px] uppercase tracking-widest font-black text-slate-500 dark:text-zinc-400 mb-4">Topic Categories</label>
+                <div className="flex flex-wrap gap-2.5">
                   {categories.map(cat => (
                     <button
                       key={cat}
                       type="button"
                       onClick={() => setCategory(cat)}
-                      className={`px-3 py-2 rounded-md text-xs sm:text-sm font-medium border transition-all duration-200 outline-none
-                        ${category === cat ? 'bg-emerald-600 dark:bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-400 hover:border-emerald-300 dark:hover:border-emerald-700'}`}
+                      className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition-all duration-300 outline-none
+                        ${category === cat ? 'bg-emerald-600 dark:bg-emerald-600 border-emerald-600 text-white shadow-md transform -translate-y-0.5' : 'bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm border-slate-200/60 dark:border-zinc-700/60 text-slate-600 dark:text-zinc-400 hover:border-emerald-400 dark:hover:border-emerald-500 hover:shadow-sm hover:bg-white dark:hover:bg-zinc-800'}`}
                     >
                       {cat}
                     </button>
@@ -316,18 +355,20 @@ export default function AppointmentForm({ onDone, user }: any) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-zinc-300 mb-2">Private Notes Context</label>
+                <label className="block text-[10px] uppercase tracking-widest font-black text-slate-500 dark:text-zinc-400 mb-3">Private Notes Context</label>
                 <textarea 
                   required 
                   value={details} 
                   onChange={e => setDetails(e.target.value)} 
                   rows={4} 
                   placeholder="Share a brief context of what you'd like to discuss so your counselor can prepare..." 
-                  className="w-full h-32 border border-slate-300 dark:border-zinc-700 rounded-lg p-3 sm:p-4 bg-white dark:bg-zinc-900 focus:bg-white dark:focus:bg-zinc-800 text-sm text-slate-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500 transition-colors resize-none placeholder:text-slate-400"
+                  className="w-full h-36 glass-panel border-slate-200/80 dark:border-zinc-700/80 rounded-2xl p-5 focus:bg-white dark:focus:bg-zinc-800 text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-sm transition-all resize-none placeholder:text-slate-400"
                 />
-                 <div className="mt-3 flex items-start gap-2 text-xs text-slate-500 dark:text-zinc-400">
-                    <Info className="flex-shrink-0 text-emerald-500 mt-0.5" size={14} />
-                    <p>All information provided is strictly confidential and end-to-end encrypted before syncing.</p>
+                 <div className="mt-4 flex items-start gap-2.5 text-xs text-slate-500 dark:text-zinc-400 font-medium">
+                    <div className="w-5 h-5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                      <Info className="text-emerald-500" size={12} />
+                    </div>
+                    <p className="pt-0.5">All information provided is strictly confidential and end-to-end encrypted before syncing.</p>
                  </div>
               </div>
 
@@ -336,25 +377,25 @@ export default function AppointmentForm({ onDone, user }: any) {
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl p-4 flex gap-3 shadow-inner"
+                  className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md border border-slate-200/60 dark:border-zinc-700/60 rounded-2xl p-5 flex gap-4 shadow-sm"
                 >
-                  <div className={`w-12 h-12 rounded-xl shrink-0 flex items-center justify-center font-bold text-sm shadow-sm ${getAvatarClass(selectedCounselorProfile?.avatarColor || 'emerald')}`}>
+                  <div className={`w-14 h-14 rounded-2xl shrink-0 flex items-center justify-center font-black text-lg shadow-inner ${getAvatarClass(selectedCounselorProfile?.avatarColor || 'emerald')}`}>
                     {selectedSlot.counselor.split(' ').map((n: any) => n[0]).slice(0, 2).join('').toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start gap-2">
-                      <div className="font-bold text-sm text-slate-900 dark:text-zinc-100 truncate">{selectedSlot.counselor}</div>
-                      <span className="text-[10px] uppercase font-mono bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 px-2 py-0.5 rounded-md self-center">
+                      <div className="font-bold text-base text-slate-900 dark:text-zinc-100 truncate tracking-tight">{selectedSlot.counselor}</div>
+                      <span className="text-[9px] uppercase font-black tracking-widest bg-emerald-100/50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-lg self-center border border-emerald-200/50 dark:border-emerald-800/50">
                         Selected Counselor
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 mt-0.5">
+                    <p className="text-xs font-medium text-slate-500 dark:text-zinc-400 line-clamp-2 mt-1 leading-relaxed">
                       {selectedCounselorProfile?.bio || "Assigned Saina Care counselor."}
                     </p>
                     {selectedCounselorProfile?.interests && selectedCounselorProfile.interests.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
+                      <div className="flex flex-wrap gap-1.5 mt-3">
                         {selectedCounselorProfile.interests.slice(0, 3).map((spec: string) => (
-                          <span key={spec} className="bg-slate-150 dark:bg-zinc-700 text-slate-600 dark:text-zinc-300 text-[9px] px-1.5 py-0.5 rounded font-semibold">
+                          <span key={spec} className="bg-slate-100 dark:bg-zinc-700/50 text-slate-600 dark:text-zinc-300 text-[10px] px-2 py-0.5 rounded-md font-bold tracking-wide">
                             {spec}
                           </span>
                         ))}
@@ -364,14 +405,14 @@ export default function AppointmentForm({ onDone, user }: any) {
                 </motion.div>
               )}
 
-              <div className="pt-4 mt-auto">
+              <div className="pt-6 mt-auto">
                 <button 
                   type="submit" 
                   disabled={!category || !selectedDate || !selectedSlot || !details} 
-                  className="bg-slate-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-slate-800 dark:hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed font-semibold py-3.5 px-6 rounded-lg transition-all shadow-md focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 w-full flex items-center justify-center gap-2"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50 disabled:cursor-not-allowed font-bold py-4 px-6 rounded-xl transition-all shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 w-full flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
                 >
                   Confirm Appointment
-                  {selectedSlot && <span className="opacity-80 font-normal">({selectedSlot.time})</span>}
+                  {selectedSlot && <span className="opacity-90 font-semibold bg-white/20 px-2 py-0.5 rounded-md text-xs">{selectedSlot.time}</span>}
                 </button>
               </div>
             </form>

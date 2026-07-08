@@ -1,31 +1,60 @@
 // File: src/features/student/components/StudentChatTab.jsx
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { getRelativeTime } from '../../../utils/time';
-import { ChevronRight, ImagePlus, Send, X, MessageSquare } from 'lucide-react';
-import { getAllUsers, fetchMessagesByStudent, sendChatMessage } from '../../../services/localEngine';
-import { useDatabaseEvent } from '../../../hooks/useDatabaseEvent';
+import { ChevronRight, ImagePlus, Send, X, MessageSquare, Loader2 } from 'lucide-react';
+import { useDirectory, usePresence } from '../../../hooks/useSocial';
+import { useDirectMessages } from '../../../hooks/useGroupChat';
+import { supabase } from '../../../lib/supabase';
 
 export default function StudentChatTab({ user, requests }) {
   const [text, setText] = useState('');
   const [imageBase64, setImageBase64] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const chatEndRef = React.useRef<HTMLDivElement | null>(null);
   
-  const loadMessages = React.useCallback(() => {
-    setMessages(fetchMessagesByStudent(user.id));
-  }, [user.id]);
-
-  useEffect(() => {
-    loadMessages();
-  }, [loadMessages]);
-
-  useDatabaseEvent('db_updated', loadMessages);
-
-  const counselors = getAllUsers().filter(u => u.role === 'counselor');
+  const { isUserOnline } = usePresence();
+  const { data: directoryData } = useDirectory();
+  const counselors = directoryData?.filter(u => u.role === 'counselor') || [];
   
-  const assignedRequest = requests.find(r => r.assignedTo);
-  const [activeCounselorId, setActiveCounselorId] = useState(assignedRequest?.assignedTo || counselors[0]?.id || null);
+  const assignedRequest = requests?.find(r => r.assignedTo);
+  const [activeCounselorId, setActiveCounselorId] = useState(assignedRequest?.assignedTo || null);
+
+  // Set default active counselor when directory loads if none selected
+  useEffect(() => {
+    if (!activeCounselorId && counselors.length > 0) {
+      setActiveCounselorId(assignedRequest?.assignedTo || counselors[0].id);
+    }
+  }, [counselors.length, activeCounselorId, assignedRequest]);
+
+  const { messages: activeMessages, sendMessage } = useDirectMessages(user.id, activeCounselorId);
+
+  // Typing indicator sync
+  useEffect(() => {
+    if (!activeCounselorId) return;
+    const room = [user.id, activeCounselorId].sort().join('_');
+    const channel = supabase.channel(`typing_${room}`);
+    
+    channel.on('broadcast', { event: 'typing' }, (payload) => {
+      if (payload.payload.userId === activeCounselorId) {
+        setIsTyping(payload.payload.isTyping);
+      }
+    }).subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [activeCounselorId, user.id]);
+
+  const handleTyping = (e) => {
+    setText(e.target.value);
+    if (!activeCounselorId) return;
+    const room = [user.id, activeCounselorId].sort().join('_');
+    supabase.channel(`typing_${room}`).send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { userId: user.id, isTyping: e.target.value.length > 0 }
+    });
+  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
@@ -42,13 +71,18 @@ export default function StudentChatTab({ user, requests }) {
   const handleSend = (e) => {
     e.preventDefault();
     if ((!text.trim() && !imageBase64) || !activeCounselorId) return;
-    sendChatMessage(user.id, activeCounselorId, user.id, text, imageBase64 || undefined);
+    sendMessage.mutate({ text: text.trim(), imagebase64: imageBase64 || undefined }); 
+    
+    const room = [user.id, activeCounselorId].sort().join('_');
+    supabase.channel(`typing_${room}`).send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { userId: user.id, isTyping: false }
+    });
+
     setText('');
     setImageBase64(null);
   };
-
-  const activeMessages = messages.filter(m => m.counselorId === activeCounselorId)
-    .sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   useEffect(() => {
     if (chatEndRef.current) {
@@ -75,11 +109,13 @@ export default function StudentChatTab({ user, requests }) {
             >
               <div className={`relative w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-sm transition-all duration-300 ${activeCounselorId === c.id ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-emerald-500/30' : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 group-hover:scale-105'}`}>
                 {c.name.charAt(0)}
-                <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-zinc-900 ${activeCounselorId === c.id ? 'bg-emerald-400' : 'bg-emerald-400'}`}></span>
+                <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-zinc-900 ${isUserOnline(c.id) ? 'bg-emerald-400' : 'bg-slate-300 dark:bg-zinc-600'}`}></span>
               </div>
               <div className="flex-1 overflow-hidden">
                 <span className={`block truncate font-bold text-sm transition-colors ${activeCounselorId === c.id ? 'text-emerald-900 dark:text-emerald-100' : 'text-slate-800 dark:text-zinc-200'}`}>{c.name}</span>
-                <span className="text-xs block font-medium mt-0.5 text-slate-500 dark:text-zinc-500">Active now</span>
+                <span className={`text-xs block font-medium mt-0.5 ${isUserOnline(c.id) ? 'text-emerald-600 dark:text-emerald-500' : 'text-slate-400 dark:text-zinc-500'}`}>
+                  {isUserOnline(c.id) ? 'Active now' : 'Offline'}
+                </span>
               </div>
             </div>
           ))}
@@ -88,12 +124,12 @@ export default function StudentChatTab({ user, requests }) {
 
       <div className={`w-full md:w-2/3 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-slate-200/60 dark:border-zinc-800/60 md:rounded-3xl shadow-sm overflow-hidden flex-col transition-all duration-300 relative ${!activeCounselorId ? 'hidden md:flex' : 'flex'}`}>
         {!activeCounselorId ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-zinc-500 text-sm p-8 text-center bg-slate-50/50 dark:bg-zinc-900/50">
-            <div className="w-20 h-20 mb-6 bg-slate-100 dark:bg-zinc-800 rounded-full flex items-center justify-center shadow-inner">
-              <MessageSquare size={32} className="text-emerald-500/50" />
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-zinc-500 text-sm p-8 text-center bg-slate-50/50 dark:bg-zinc-900/50 h-full">
+            <div className="w-20 h-20 mb-6 bg-slate-100 dark:bg-zinc-800 rounded-full flex items-center justify-center shadow-inner border border-slate-200 dark:border-zinc-700 relative overflow-hidden">
+              <MessageSquare size={32} className="text-emerald-500/60 dark:text-emerald-400/50" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-700 dark:text-zinc-300 mb-2">Your Conversations</h3>
-            <p className="max-w-xs">Select a counselor from the sidebar to begin a secure messaging session.</p>
+            <h3 className="text-lg font-semibold text-slate-700 dark:text-zinc-300 mb-2">Secure Channels</h3>
+            <p className="max-w-xs text-slate-500">Select your assigned counselor from the sidebar to begin a secure messaging session.</p>
           </div>
         ) : (
           <>
@@ -113,41 +149,58 @@ export default function StudentChatTab({ user, requests }) {
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 bg-gradient-to-b from-slate-50/30 to-slate-100/50 dark:from-zinc-900/30 dark:to-zinc-950/50 flex flex-col scroll-smooth">
               {activeMessages.length === 0 && <div className="text-center text-sm font-medium text-slate-400 dark:text-zinc-500 my-auto bg-white/60 dark:bg-zinc-800/60 p-4 rounded-2xl mx-auto backdrop-blur-sm border border-slate-100 dark:border-zinc-700/50 shadow-sm">This is the beginning of your secure conversation.</div>}
               {activeMessages.map((m, i) => {
-                const isMe = m.senderId === user.id;
-                const showAvatar = !isMe && (i === 0 || activeMessages[i-1].senderId !== m.senderId);
+                const isMe = m.senderid === user.id;
+                const showAvatar = !isMe && (i === 0 || activeMessages[i-1].senderid !== m.senderid);
                 return (
-                  <div key={m.id} className={`flex max-w-[85%] md:max-w-[75%] ${isMe ? 'self-end flex-row-reverse' : 'self-start'} gap-2 group`}>
+                  <div key={m.id || i} className={`flex max-w-[85%] md:max-w-[75%] ${isMe ? 'self-end flex-row-reverse' : 'self-start'} gap-2 group`}>
                     {!isMe && (
                       <div className="w-8 shrink-0 flex flex-col justify-end">
                         {showAvatar && (
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white text-xs font-bold shadow-sm mb-1">
-                            {counselors.find(c => c.id === m.senderId)?.name.charAt(0) || 'C'}
+                            {counselors.find(c => c.id === m.senderid)?.name.charAt(0) || 'C'}
                           </div>
                         )}
                       </div>
                     )}
                     
-                    <div className={`p-3.5 md:p-4 shadow-sm backdrop-blur-sm
-                      ${isMe 
-                        ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-2xl rounded-br-sm border border-emerald-400/20' 
-                        : 'bg-white dark:bg-zinc-800 border border-slate-200/60 dark:border-zinc-700/60 text-slate-800 dark:text-zinc-100 rounded-2xl rounded-bl-sm'}
-                    `}>
-                      {m.imageBase64 && (
-                        <div className="relative rounded-xl overflow-hidden mb-2 shadow-inner border border-black/5 dark:border-white/5 bg-black/5">
-                          <img src={m.imageBase64} alt="Attachment" className="max-w-full object-cover max-h-64 rounded-xl hover:scale-105 transition-transform duration-500 cursor-zoom-in" />
-                        </div>
-                      )}
-                      
-                      {m.text && <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{m.text}</p>}
-                      
-                      <div className={`text-[10px] mt-1.5 font-medium flex items-center justify-between gap-2 ${isMe ? 'text-emerald-100/80' : 'text-slate-400 dark:text-zinc-500'}`}>
-                        <span>{getRelativeTime(m.timestamp)}</span>
-                        <span>{new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    <div className="flex flex-col">
+                      <div className={`p-3.5 md:p-4 shadow-sm backdrop-blur-sm
+                        ${isMe 
+                          ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-2xl rounded-br-sm border border-emerald-400/20' 
+                          : 'bg-white dark:bg-zinc-800 border border-slate-200/60 dark:border-zinc-700/60 text-slate-800 dark:text-zinc-100 rounded-2xl rounded-bl-sm'}
+                      `}>
+                        {m.imagebase64 && (
+                          <div className="relative rounded-xl overflow-hidden mb-2 shadow-inner border border-black/5 dark:border-white/5 bg-black/5">
+                            <img 
+                              src={m.imagebase64} 
+                              alt="Attachment" 
+                              onClick={() => setSelectedImage(m.imagebase64)}
+                              className="max-w-full object-cover max-h-64 rounded-xl hover:scale-105 transition-transform duration-500 cursor-zoom-in" 
+                            />
+                          </div>
+                        )}
+                        {m.text && <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{m.text}</p>}
                       </div>
+                      <span className={`text-[11px] font-medium mt-1.5 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity ${isMe ? 'justify-end text-emerald-600/70 dark:text-emerald-400/70' : 'justify-start text-slate-400 dark:text-zinc-500'}`}>
+                        {getRelativeTime(m.timestamp)}
+                        {isMe && <span className="w-3 h-3 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center"><ChevronRight size={8} className="text-emerald-600 dark:text-emerald-400"/></span>}
+                      </span>
                     </div>
                   </div>
                 );
               })}
+              
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="w-10"></div>
+                  <div className="bg-white dark:bg-zinc-800 border border-slate-100 dark:border-zinc-700/50 p-4 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-emerald-500/50 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></span>
+                    <span className="w-1.5 h-1.5 bg-emerald-500/70 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
+                    <span className="w-1.5 h-1.5 bg-emerald-500/90 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></span>
+                  </div>
+                </div>
+              )}
+              
               <div ref={chatEndRef} />
             </div>
 
@@ -170,14 +223,7 @@ export default function StudentChatTab({ user, requests }) {
                    <input 
                      type="text" 
                      value={text} 
-                     onChange={e => setText(e.target.value)} 
-                     onFocus={() => {
-                        setTimeout(() => {
-                          if (chatEndRef.current) {
-                            chatEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                          }
-                        }, 250);
-                     }}
+                     onChange={handleTyping} 
                      className="w-full border border-slate-200 dark:border-zinc-700 rounded-full pl-5 pr-14 py-3.5 bg-slate-50 dark:bg-zinc-900/80 text-slate-900 dark:text-zinc-100 outline-none focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-emerald-500/50 dark:focus:ring-emerald-600/50 text-[15px] transition-all shadow-inner" 
                      placeholder="Message..."
                    />
@@ -194,6 +240,30 @@ export default function StudentChatTab({ user, requests }) {
           </>
         )}
       </div>
+      
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={() => setSelectedImage(null)}
+          >
+            <button 
+              className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+              onClick={() => setSelectedImage(null)}
+            >
+              <X size={24} />
+            </button>
+            <motion.img 
+              initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
+              src={selectedImage} 
+              alt="Fullscreen view" 
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl cursor-zoom-out"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

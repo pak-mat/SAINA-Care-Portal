@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS "users" CASCADE;
 
 -- 2. Recreate Tables
 CREATE TABLE "users" (
-  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "id" UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   "name" TEXT NOT NULL,
   "email" TEXT UNIQUE NOT NULL,
   "role" TEXT NOT NULL,
@@ -21,6 +21,10 @@ CREATE TABLE "users" (
   "status" TEXT DEFAULT 'Available',
   "signature" TEXT,
   "preferences" JSONB DEFAULT '{}'::jsonb,
+  "grade" TEXT,
+  "gender" TEXT,
+  "age" TEXT,
+  "risklevel" TEXT DEFAULT 'Low',
   "created_at" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
@@ -69,21 +73,51 @@ CREATE TABLE "notifications" (
 
 -- 3. Enable Rules & Fix the Row-Level Security (RLS) Errors
 ALTER TABLE "users" ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can read own data" ON "users" FOR SELECT USING (id = auth.uid() OR auth.role() = 'service_role');
+CREATE POLICY "Users can read own data or counselors read all" ON "users" FOR SELECT USING (
+  id = auth.uid() OR (auth.jwt() -> 'user_metadata' ->> 'role') = 'counselor' OR auth.role() = 'service_role'
+);
 CREATE POLICY "Users can update own data" ON "users" FOR UPDATE USING (id = auth.uid() OR auth.role() = 'service_role');
 
 ALTER TABLE "requests" ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Student read own requests, Counselors read all" ON "requests" FOR SELECT USING (studentid = auth.uid() OR auth.role() = 'service_role');
+CREATE POLICY "Student read own requests, Counselors read all" ON "requests" FOR SELECT USING (
+  studentid = auth.uid() OR (auth.jwt() -> 'user_metadata' ->> 'role') = 'counselor' OR auth.role() = 'service_role'
+);
+CREATE POLICY "Students insert own requests" ON "requests" FOR INSERT WITH CHECK (
+  studentid = auth.uid() OR auth.role() = 'service_role'
+);
+CREATE POLICY "Counselors update requests" ON "requests" FOR UPDATE USING (
+  (auth.jwt() -> 'user_metadata' ->> 'role') = 'counselor' OR auth.role() = 'service_role'
+);
 
 ALTER TABLE "messages" ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Student read own messages, Counselors read all" ON "messages" FOR SELECT USING (studentid = auth.uid() OR senderid = auth.uid() OR auth.role() = 'service_role');
+CREATE POLICY "Student read own messages, Counselors read all" ON "messages" FOR SELECT USING (
+  studentid = auth.uid() OR senderid = auth.uid() OR (auth.jwt() -> 'user_metadata' ->> 'role') = 'counselor' OR auth.role() = 'service_role'
+);
+CREATE POLICY "Users insert own messages" ON "messages" FOR INSERT WITH CHECK (
+  senderid = auth.uid() OR auth.role() = 'service_role'
+);
 
 ALTER TABLE "notifications" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read own notifications" ON "notifications" FOR SELECT USING (userid = auth.uid() OR auth.role() = 'service_role');
 
--- 4. Insert Default Demo Users
-INSERT INTO "users" ("id", "name", "email", "role", "studentid", "password", "status")
-VALUES 
-  ('123e4567-e89b-12d3-a456-426614174000', 'Adam Shah', 'adam@demo.com', 'student', 'ST-001', 'dummy', 'Available'),
-  ('123e4567-e89b-12d3-a456-426614174001', 'Cik Nor', 'nor@demo.com', 'counselor', NULL, 'dummy', 'Available')
-ON CONFLICT ("email") DO NOTHING;
+
+-- 4. Set up Trigger for Auth Users
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.users (id, email, name, role, studentid)
+  VALUES (
+    new.id,
+    new.email,
+    COALESCE(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+    COALESCE(new.raw_user_meta_data->>'role', 'student'),
+    new.raw_user_meta_data->>'studentId'
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
