@@ -35,16 +35,75 @@ export function useDirectMessages(userId?: string, partnerId?: string) {
   });
 
   const sendMessage = useMutation({
-    mutationFn: async ({ text, imagebase64 }: { text: string; imagebase64?: string }) => {
+    mutationFn: async ({ text, imagebase64, senderId, file }: { text: string; imagebase64?: string; senderId?: string; file?: File }) => {
       if (!userId || !partnerId) throw new Error('Missing IDs');
+      const actualSenderId = senderId || userId;
+      
+      let fileUrl = null;
+      let fileName = null;
+      let fileType = null;
+      let fileSize = null;
+      
+      if (file) {
+        if (file.size > 10 * 1024 * 1024) throw new Error('File size exceeds 10MB limit');
+        
+        fileName = `${actualSenderId}-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        fileType = file.type;
+        fileSize = file.size;
+        
+        const { error: uploadError } = await supabase.storage.from('chat-attachments').upload(fileName, file);
+        if (uploadError) throw uploadError;
+        
+        const { data } = supabase.storage.from('chat-attachments').getPublicUrl(fileName);
+        fileUrl = data.publicUrl;
+      }
+
       const { error } = await supabase.from('messages').insert({
         studentid: userId,
         counselorid: partnerId,
-        senderid: userId,
+        senderid: actualSenderId,
         text,
-        imagebase64: imagebase64 || null
+        imagebase64: imagebase64 || null,
+        file_url: fileUrl,
+        file_name: file ? file.name : null,
+        file_type: fileType,
+        file_size: fileSize
       });
       if (error) throw error;
+    },
+    onMutate: async (newMsg) => {
+      await queryClient.cancelQueries({ queryKey: ['messages', userId, partnerId] });
+      const previousMessages = queryClient.getQueryData(['messages', userId, partnerId]);
+      
+      let optimisticUrl = null;
+      if (newMsg.file) {
+         optimisticUrl = URL.createObjectURL(newMsg.file);
+      }
+
+      const optimisticMsg = {
+        id: `temp-${Date.now()}`,
+        studentid: userId,
+        counselorid: partnerId,
+        senderid: newMsg.senderId || userId,
+        text: newMsg.text,
+        imagebase64: newMsg.imagebase64 || null,
+        file_url: optimisticUrl,
+        file_name: newMsg.file?.name || null,
+        file_type: newMsg.file?.type || null,
+        file_size: newMsg.file?.size || null,
+        timestamp: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData(['messages', userId, partnerId], (old: any) => {
+        return [...(old || []), optimisticMsg];
+      });
+
+      return { previousMessages };
+    },
+    onError: (err, newMsg, context) => {
+      if (context?.previousMessages) {
+        queryClient.setQueryData(['messages', userId, partnerId], context.previousMessages);
+      }
     }
   });
 
@@ -130,14 +189,72 @@ export function useGroupMessages(groupId?: string) {
   });
 
   const sendMessage = useMutation({
-    mutationFn: async ({ senderId, senderName, text }: { senderId: string, senderName: string, text: string }) => {
+    mutationFn: async ({ senderId, senderName, text, imagebase64, file }: { senderId: string, senderName: string, text: string, imagebase64?: string, file?: File }) => {
+      let fileUrl = null;
+      let fileName = null;
+      let fileType = null;
+      let fileSize = null;
+      
+      if (file) {
+        if (file.size > 10 * 1024 * 1024) throw new Error('File size exceeds 10MB limit');
+        
+        fileName = `${senderId}-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        fileType = file.type;
+        fileSize = file.size;
+        
+        const { error: uploadError } = await supabase.storage.from('chat-attachments').upload(fileName, file);
+        if (uploadError) throw uploadError;
+        
+        const { data } = supabase.storage.from('chat-attachments').getPublicUrl(fileName);
+        fileUrl = data.publicUrl;
+      }
+
       const { error } = await supabase.from('group_messages').insert({
         group_id: groupId!,
         sender_id: senderId,
         sender_name: senderName,
-        text
+        text,
+        imagebase64: imagebase64 || null,
+        file_url: fileUrl,
+        file_name: file ? file.name : null,
+        file_type: fileType,
+        file_size: fileSize
       });
       if (error) throw error;
+    },
+    onMutate: async (newMsg) => {
+      await queryClient.cancelQueries({ queryKey: ['groupMessages', groupId] });
+      const previousMessages = queryClient.getQueryData(['groupMessages', groupId]);
+      
+      let optimisticUrl = null;
+      if (newMsg.file) {
+         optimisticUrl = URL.createObjectURL(newMsg.file);
+      }
+
+      const optimisticMsg = {
+        id: `temp-${Date.now()}`,
+        group_id: groupId!,
+        sender_id: newMsg.senderId,
+        sender_name: newMsg.senderName,
+        text: newMsg.text,
+        imagebase64: newMsg.imagebase64 || null,
+        file_url: optimisticUrl,
+        file_name: newMsg.file?.name || null,
+        file_type: newMsg.file?.type || null,
+        file_size: newMsg.file?.size || null,
+        timestamp: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData(['groupMessages', groupId], (old: any) => {
+        return [...(old || []), optimisticMsg];
+      });
+
+      return { previousMessages };
+    },
+    onError: (err, newMsg, context) => {
+      if (context?.previousMessages) {
+        queryClient.setQueryData(['groupMessages', groupId], context.previousMessages);
+      }
     }
   });
 

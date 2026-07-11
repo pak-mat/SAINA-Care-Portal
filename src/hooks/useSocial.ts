@@ -128,6 +128,11 @@ export function useSocialNetwork(userId?: string) {
     }
   });
 
+  const invalidateSocial = () => {
+    queryClient.invalidateQueries({ queryKey: ['friendRequests'] });
+    queryClient.invalidateQueries({ queryKey: ['friends'] });
+  };
+
   const sendRequest = useMutation({
     mutationFn: async (receiverId: string) => {
       if (!userId) throw new Error('Not logged in');
@@ -136,7 +141,19 @@ export function useSocialNetwork(userId?: string) {
         receiver_id: receiverId
       });
       if (error) throw error;
-    }
+    },
+    onSuccess: invalidateSocial
+  });
+
+  const cancelRequest = useMutation({
+    mutationFn: async (receiverId: string) => {
+      if (!userId) throw new Error('Not logged in');
+      const { error } = await supabase.from('friend_requests')
+        .delete()
+        .match({ sender_id: userId, receiver_id: receiverId, status: 'pending' });
+      if (error) throw error;
+    },
+    onSuccess: invalidateSocial
   });
 
   const acceptRequest = useMutation({
@@ -152,7 +169,8 @@ export function useSocialNetwork(userId?: string) {
         friend_id: userId
       });
       if (err2) throw err2;
-    }
+    },
+    onSuccess: invalidateSocial
   });
 
   const declineRequest = useMutation({
@@ -162,7 +180,8 @@ export function useSocialNetwork(userId?: string) {
         .update({ status: 'declined' })
         .match({ sender_id: senderId, receiver_id: userId });
       if (error) throw error;
-    }
+    },
+    onSuccess: invalidateSocial
   });
 
   const removeFriend = useMutation({
@@ -172,7 +191,8 @@ export function useSocialNetwork(userId?: string) {
         .delete()
         .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`);
       if (error) throw error;
-    }
+    },
+    onSuccess: invalidateSocial
   });
 
   const sendKudos = useMutation({
@@ -183,6 +203,9 @@ export function useSocialNetwork(userId?: string) {
         receiver_id: receiverId
       });
       if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kudos'] });
     }
   });
 
@@ -192,6 +215,7 @@ export function useSocialNetwork(userId?: string) {
     requestsSent: requestsSentQuery.data || [],
     kudosCount: kudosReceivedQuery.data || 0,
     sendRequest,
+    cancelRequest,
     acceptRequest,
     declineRequest,
     removeFriend,

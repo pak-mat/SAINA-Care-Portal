@@ -78,5 +78,9 @@ export interface ChatMessage {
   senderId: string;
   text: string;
   imageBase64?: string;
+  file_url?: string;
+  file_name?: string;
+  file_type?: string;
+  file_size?: number;
   timestamp: string;
 }

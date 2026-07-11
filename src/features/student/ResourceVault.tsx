@@ -1,4 +1,3 @@
-// File: src/features/student/ResourceVault.jsx
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, X, Clock, ChevronRight, BookOpen } from 'lucide-react';
