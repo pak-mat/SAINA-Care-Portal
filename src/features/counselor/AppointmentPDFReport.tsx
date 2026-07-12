@@ -222,7 +222,7 @@ function formatDateTime(dateStr: string | null | undefined): string {
 }
 
 // ── Types ────────────────────────────────────────────────────────
-interface ReportRequest {
+export interface ReportRequest {
   id: string;
   type: string;
   studentName?: string;

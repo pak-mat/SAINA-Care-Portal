@@ -1,115 +1,45 @@
-// File: src/features/student/components/AppointmentForm.tsx
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Calendar as CalendarIcon, Clock, CheckCircle, Info, ChevronLeft, 
-  ChevronRight, User, Sparkles, Linkedin, Twitter, Instagram, Globe 
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { motion } from 'motion/react';
+import { Calendar as CalendarIcon, Info, Sparkles } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
+import { User } from '../../../types';
+import { useActiveCounselors } from '../../../hooks/useActiveCounselors';
+import { getAvatarClass } from '../../../utils/uiUtils';
+import CalendarPicker from './CalendarPicker';
+import TimeSlotPicker from './TimeSlotPicker';
+import CounselorProfileModal from './CounselorProfileModal';
 
-// Removed mock createAppointment
+interface AppointmentFormProps {
+  onDone: () => void;
+  user: User;
+}
 
-export default function AppointmentForm({ onDone, user }: any) {
+export default function AppointmentForm({ onDone, user }: AppointmentFormProps) {
   const [category, setCategory] = useState('');
   const [details, setDetails] = useState('');
-  const [counselors, setCounselors] = useState<any[]>([]);
-  const [viewingProfile, setViewingProfile] = useState<any | null>(null);
+  const [viewingProfile, setViewingProfile] = useState<User | null>(null);
   
-  useEffect(() => {
-    // Fetch all active counselors when the form loads
-    const fetchCounselors = async () => {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('role', 'counselor')
-        .neq('status', 'Away');
-        
-      if (data && !error) {
-        setCounselors(data);
-      } else {
-        console.error("Error fetching counselors:", error);
-      }
-    };
-    fetchCounselors();
-  }, []);
-  
-  // Calendar state
-  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<{time: string, counselor: string} | null>(null);
 
-  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
-  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
-
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const daysInMonth = getDaysInMonth(year, month);
-  const firstDay = getFirstDayOfMonth(year, month);
-  
-  const generateDays = () => {
-    const days = [];
-    for (let i = 0; i < firstDay; i++) days.push(null);
-    for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
-    return days;
-  };
-
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
-  };
-
-  const isPast = (date: Date) => {
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    return date < today;
-  };
+  const { data: counselors = [] } = useActiveCounselors();
 
   const categories = ['Academics', 'Career Guidance', 'Anxiety & Stress', 'Personal Issues'];
 
-  // Presets mapping helper
-  const getBannerClass = (styleId: string) => {
-    const presets: Record<string, string> = {
-      emerald_calm: 'bg-gradient-to-r from-teal-500 to-emerald-600',
-      indigo_dusk: 'bg-gradient-to-r from-violet-600 to-indigo-600',
-      sunset_glow: 'bg-gradient-to-r from-orange-400 via-rose-500 to-amber-500',
-      midnight_blue: 'bg-gradient-to-r from-slate-900 via-zinc-800 to-slate-900',
-      rose_gold: 'bg-gradient-to-r from-rose-400 to-orange-300',
-      cosmic_neon: 'bg-gradient-to-r from-purple-800 via-fuchsia-700 to-indigo-900'
-    };
-    return presets[styleId] || presets['emerald_calm'];
-  };
-
-  const getAvatarClass = (colorId: string) => {
-    const presets: Record<string, string> = {
-      emerald: 'bg-emerald-600 text-white',
-      indigo: 'bg-indigo-600 text-white',
-      violet: 'bg-purple-600 text-white',
-      rose: 'bg-rose-600 text-white',
-      amber: 'bg-amber-500 text-zinc-950',
-      blue: 'bg-blue-600 text-white'
-    };
-    return presets[colorId] || presets['emerald'];
-  };
-
-  // Dynamically generate slots based on the counselors working today
+  // Dynamically generate slots based on the counselors working on the given date
   const getAvailableSlots = (date: Date) => {
     const day = date.getDay();
     
-    // Check which counselors are available on this day
     const workingCounselors = counselors.filter(c => {
       const schedule = c.preferences?.availabilitySchedule;
       if (schedule) {
         return !!schedule[day];
       }
-      // Fallback
       const availableDays = c.preferences?.availableDays || [1, 2, 3, 4, 5];
       return availableDays.includes(day);
     });
 
-    if (workingCounselors.length === 0) return []; // No counselors working today
+    if (workingCounselors.length === 0) return []; 
     
     let slots: any[] = [];
     
@@ -120,7 +50,6 @@ export default function AppointmentForm({ onDone, user }: any) {
       if (schedule && schedule[day]) {
         times = schedule[day];
       } else {
-        // Fallback
         times = c.preferences?.availableSlots || ['09:00 AM', '10:30 AM', '12:00 PM', '02:00 PM', '03:30 PM'];
       }
 
@@ -129,7 +58,6 @@ export default function AppointmentForm({ onDone, user }: any) {
       });
     });
     
-    // Sort chronologically
     return slots.sort((a,b) => {
       const ta = new Date(`1970/01/01 ${a.time}`);
       const tb = new Date(`1970/01/01 ${b.time}`);
@@ -137,14 +65,12 @@ export default function AppointmentForm({ onDone, user }: any) {
     });
   };
 
-  const submit = async (e: any) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDate || !selectedSlot) return;
     
-    const formattedDate = selectedDate.toISOString().split('T')[0];
     const counselor = counselors.find(c => c.name === selectedSlot.counselor);
     
-    // Combine date and time for scheduled_date
     const timeParts = selectedSlot.time.match(/(\d+):(\d+)\s+(AM|PM)/);
     let hours = 0;
     let mins = 0;
@@ -175,7 +101,6 @@ export default function AppointmentForm({ onDone, user }: any) {
     }
   };
 
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const selectedCounselorProfile = counselors.find(c => c.name === selectedSlot?.counselor);
 
   return (
@@ -185,7 +110,6 @@ export default function AppointmentForm({ onDone, user }: any) {
           
           {/* Left Column: Context & Calendar */}
           <div className="lg:w-1/2 p-6 sm:p-10 border-b lg:border-b-0 lg:border-r border-slate-200/50 dark:border-zinc-800/50 relative">
-            {/* Background flourish */}
             <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
             
             <div className="mb-8 relative z-10">
@@ -208,8 +132,8 @@ export default function AppointmentForm({ onDone, user }: any) {
               </h3>
               <div className="flex flex-wrap gap-4">
                 {counselors.map((c) => {
-                  const initials = c.name.split(' ').map((n: any) => n[0]).slice(0, 2).join('').toUpperCase();
-                  const avatarBg = getAvatarClass(c.avatarColor || 'emerald');
+                  const initials = c.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+                  const avatarBg = getAvatarClass(c.avatarColor);
                   return (
                     <button
                       key={c.id}
@@ -238,98 +162,24 @@ export default function AppointmentForm({ onDone, user }: any) {
               </div>
             </div>
 
-            {/* Calendar UI */}
-            <div className="bg-slate-50/80 dark:bg-zinc-900/60 backdrop-blur-md rounded-2xl p-5 sm:p-6 border border-slate-200/50 dark:border-zinc-800/50 shadow-sm relative z-10">
-              <div className="flex justify-between items-center mb-6">
-                <button type="button" onClick={prevMonth} className="p-2 hover:bg-white dark:hover:bg-zinc-800 rounded-xl shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-zinc-700 transition-all">
-                  <ChevronLeft size={18} className="text-slate-600 dark:text-zinc-400" />
-                </button>
-                <h3 className="text-slate-900 dark:text-zinc-100 font-bold tracking-wide uppercase text-sm">
-                  {monthNames[month]} {year}
-                </h3>
-                <button type="button" onClick={nextMonth} className="p-2 hover:bg-white dark:hover:bg-zinc-800 rounded-xl shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-zinc-700 transition-all">
-                  <ChevronRight size={18} className="text-slate-600 dark:text-zinc-400" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-3">
-                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
-                  <div key={d} className="text-center text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest py-1">{d}</div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-7 gap-2 sm:gap-3 text-sm text-slate-700 dark:text-zinc-300">
-                <AnimatePresence mode="popLayout">
-                  {generateDays().map((date, idx) => {
-                    if (!date) return <div key={idx} className="p-2" />;
-                    const hasSlots = getAvailableSlots(date).length > 0;
-                    const disabled = (isPast(date) && !isToday(date)) || !hasSlots;
-                    const isSelected = selectedDate?.toDateString() === date.toDateString();
-
-                    let btnClass = "relative w-full h-10 sm:h-12 flex items-center justify-center rounded-xl font-bold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ";
-                    
-                    if (disabled) {
-                      btnClass += "text-slate-400 dark:text-zinc-600 cursor-not-allowed opacity-40 bg-slate-100/50 dark:bg-zinc-800/30 ";
-                    } else if (isSelected) {
-                      btnClass += "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 transform scale-[1.05] ";
-                    } else {
-                      btnClass += "bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 ";
-                      if (isToday(date)) btnClass += "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-zinc-900 border-none ";
-                    }
-
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        disabled={disabled}
-                        onClick={() => { setSelectedDate(date); setSelectedSlot(null); }}
-                        className={btnClass}
-                      >
-                         {date.getDate()}
-                      </button>
-                    );
-                  })}
-                </AnimatePresence>
-              </div>
-            </div>
+            {/* Calendar UI Component */}
+            <CalendarPicker 
+              selectedDate={selectedDate} 
+              onSelectDate={(date) => {
+                setSelectedDate(date);
+                setSelectedSlot(null);
+              }} 
+              getAvailableSlots={getAvailableSlots} 
+            />
             
-            {/* Time Slot Selection */}
+            {/* Time Slot Selection Component */}
             {selectedDate && (
-               <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} className="mt-8 rounded-lg">
-                 <h4 className="text-sm font-semibold text-slate-800 dark:text-zinc-200 mb-3 flex items-center gap-2">
-                   <Clock className="text-emerald-500" size={16} /> 
-                   Available Slots for {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                 </h4>
-                 
-                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                   {getAvailableSlots(selectedDate).length === 0 ? (
-                     <p className="text-sm text-slate-500 italic p-4 bg-slate-50 dark:bg-zinc-900 rounded-lg text-center">No slots available on this day.</p>
-                   ) : (
-                     getAvailableSlots(selectedDate).map((slot, i) => {
-                       const isSlotSelected = selectedSlot?.time === slot.time && selectedSlot?.counselor === slot.counselor;
-                       return (
-                         <button
-                           key={i}
-                           type="button"
-                           onClick={() => setSelectedSlot(slot)}
-                           className={`w-full flex items-center justify-between p-3 rounded-lg border text-left transition-all duration-200
-                             ${isSlotSelected 
-                               ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200 ring-1 ring-emerald-600' 
-                               : 'border-slate-200 dark:border-zinc-700 hover:border-emerald-300 dark:hover:border-emerald-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300'}`}
-                         >
-                           <div className="flex items-center gap-3">
-                             <span className="text-sm font-bold">{slot.time}</span>
-                             <span className="text-xs flex items-center gap-1 opacity-80">
-                               <User size={12} /> {slot.counselor}
-                             </span>
-                           </div>
-                           {isSlotSelected && <CheckCircle size={16} className="text-emerald-600" />}
-                         </button>
-                       );
-                     })
-                   )}
-                 </div>
-               </motion.div>
+              <TimeSlotPicker 
+                selectedDate={selectedDate}
+                slots={getAvailableSlots(selectedDate)}
+                selectedSlot={selectedSlot}
+                onSelectSlot={setSelectedSlot}
+              />
             )}
           </div>
 
@@ -373,14 +223,14 @@ export default function AppointmentForm({ onDone, user }: any) {
               </div>
 
               {/* Counselor Social Card Embedded Preview */}
-              {selectedSlot && (
+              {selectedSlot && selectedCounselorProfile && (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md border border-slate-200/60 dark:border-zinc-700/60 rounded-2xl p-5 flex gap-4 shadow-sm"
                 >
-                  <div className={`w-14 h-14 rounded-2xl shrink-0 flex items-center justify-center font-black text-lg shadow-inner ${getAvatarClass(selectedCounselorProfile?.avatarColor || 'emerald')}`}>
-                    {selectedSlot.counselor.split(' ').map((n: any) => n[0]).slice(0, 2).join('').toUpperCase()}
+                  <div className={`w-14 h-14 rounded-2xl shrink-0 flex items-center justify-center font-black text-lg shadow-inner ${getAvatarClass(selectedCounselorProfile.avatarColor)}`}>
+                    {selectedSlot.counselor.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start gap-2">
@@ -390,9 +240,9 @@ export default function AppointmentForm({ onDone, user }: any) {
                       </span>
                     </div>
                     <p className="text-xs font-medium text-slate-500 dark:text-zinc-400 line-clamp-2 mt-1 leading-relaxed">
-                      {selectedCounselorProfile?.bio || "Assigned Saina Care counselor."}
+                      {selectedCounselorProfile.bio || "Assigned Saina Care counselor."}
                     </p>
-                    {selectedCounselorProfile?.interests && selectedCounselorProfile.interests.length > 0 && (
+                    {selectedCounselorProfile.interests && selectedCounselorProfile.interests.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-3">
                         {selectedCounselorProfile.interests.slice(0, 3).map((spec: string) => (
                           <span key={spec} className="bg-slate-100 dark:bg-zinc-700/50 text-slate-600 dark:text-zinc-300 text-[10px] px-2 py-0.5 rounded-md font-bold tracking-wide">
@@ -421,100 +271,8 @@ export default function AppointmentForm({ onDone, user }: any) {
         </div>
       </div>
 
-      {/* Dynamic Counselor Profile Dialog Backdrop */}
-      <AnimatePresence>
-        {viewingProfile && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setViewingProfile(null)}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-            />
-            
-            {/* Modal Body */}
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="relative w-full max-w-sm bg-white dark:bg-zinc-800 rounded-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-zinc-700 max-h-[90vh] overflow-y-auto"
-            >
-              <div className={`h-28 w-full ${getBannerClass(viewingProfile.bannerStyle)}`}></div>
-              
-              <div className="px-5 pb-6 text-center relative flex flex-col items-center">
-                <div className={`w-20 h-20 rounded-full -mt-10 border-4 border-white dark:border-zinc-800 flex items-center justify-center font-bold text-xl shadow ${getAvatarClass(viewingProfile.avatarColor)}`}>
-                  {viewingProfile.name.split(' ').map((n: any) => n[0]).slice(0, 2).join('').toUpperCase()}
-                </div>
+      <CounselorProfileModal profile={viewingProfile} onClose={() => setViewingProfile(null)} />
 
-                <div className="mt-2.5">
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border
-                    ${viewingProfile.status === 'Available' ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100' : 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-100'}`}>
-                    {viewingProfile.status || 'Available'}
-                  </span>
-                </div>
-
-                <h3 className="mt-2 text-md font-bold text-slate-900 dark:text-zinc-100">{viewingProfile.name}</h3>
-                <p className="text-[11px] text-slate-400 dark:text-zinc-500 font-medium">Saina Care Counselor</p>
-
-                <p className="mt-3 text-xs text-slate-600 dark:text-zinc-300 italic bg-slate-50 dark:bg-zinc-900/30 p-3 rounded-lg border border-slate-100 dark:border-zinc-700/30 w-full">
-                  "{viewingProfile.bio || 'Professional care counselor designated to support Saina Care students.'}"
-                </p>
-
-                {/* Specialties */}
-                <div className="w-full text-left mt-4 text-xs font-semibold text-slate-500">
-                  <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest block mb-1.5Packed">Coaching Focus</span>
-                  <div className="flex flex-wrap gap-1">
-                    {(viewingProfile.interests || []).map((spec: string) => (
-                      <span key={spec} className="bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400 border border-teal-100 dark:border-teal-900/60 text-[10px] px-2 py-0.5 rounded-full font-semibold">
-                        {spec}
-                      </span>
-                    ))}
-                    {(!viewingProfile.interests || viewingProfile.interests.length === 0) && (
-                      <span className="text-xs text-slate-400 italic font-mono">General Care</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Socials inside modal */}
-                {viewingProfile.socialHandles && (
-                  <div className="flex justify-center gap-2.5 mt-5 pt-3 border-t border-slate-100 dark:border-zinc-700/50 w-full">
-                    {viewingProfile.socialHandles.linkedIn && (
-                      <a href={viewingProfile.socialHandles.linkedIn} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-full bg-slate-50 dark:bg-zinc-750 flex items-center justify-center hover:bg-sky-50 dark:hover:bg-sky-950/20 text-slate-400 hover:text-sky-600 dark:hover:text-sky-450">
-                        <Linkedin size={12} />
-                      </a>
-                    )}
-                    {viewingProfile.socialHandles.twitter && (
-                      <a href={`https://twitter.com/${viewingProfile.socialHandles.twitter.replace('@','')}`} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-full bg-slate-50 dark:bg-zinc-750 flex items-center justify-center hover:bg-sky-50 dark:hover:bg-sky-900 text-slate-400 hover:text-sky-500">
-                        <Twitter size={12} />
-                      </a>
-                    )}
-                    {viewingProfile.socialHandles.instagram && (
-                      <a href={`https://instagram.com/${viewingProfile.socialHandles.instagram.replace('@','')}`} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-full bg-slate-50 dark:bg-zinc-750 flex items-center justify-center hover:bg-pink-50 dark:hover:bg-pink-950/20 text-slate-400 hover:text-pink-500">
-                        <Instagram size={12} />
-                      </a>
-                    )}
-                    {viewingProfile.socialHandles.website && (
-                      <a href={viewingProfile.socialHandles.website} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-full bg-slate-50 dark:bg-zinc-750 flex items-center justify-center hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-slate-400 hover:text-emerald-500">
-                        <Globe size={12} />
-                      </a>
-                    )}
-                  </div>
-                )}
-
-                <button 
-                  type="button"
-                  onClick={() => setViewingProfile(null)}
-                  className="mt-5 w-full bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 text-white dark:text-slate-900 font-bold text-xs py-2.5 rounded-xl transition-all"
-                >
-                  Close Profile
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }
