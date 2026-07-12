@@ -52,8 +52,8 @@ ALTER TABLE "users"
   ADD COLUMN IF NOT EXISTS "form" TEXT,
   ADD COLUMN IF NOT EXISTS "gender" TEXT,
   ADD COLUMN IF NOT EXISTS "age" TEXT,
-  ADD COLUMN IF NOT EXISTS "risklevel" TEXT DEFAULT 'Low',
-  ADD COLUMN IF NOT EXISTS "account_status" TEXT DEFAULT 'Active',
+  ADD COLUMN IF NOT EXISTS "risklevel" TEXT DEFAULT 'Low' CHECK (risklevel IN ('Low', 'Medium', 'High', 'Critical')),
+  ADD COLUMN IF NOT EXISTS "account_status" TEXT DEFAULT 'Active' CHECK (account_status IN ('Active', 'Suspended', 'Archived')),
   ADD COLUMN IF NOT EXISTS "guardian_name" TEXT,
   ADD COLUMN IF NOT EXISTS "emergency_contact" TEXT,
   ADD COLUMN IF NOT EXISTS "assigned_counselor" UUID,
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS "appointments" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "studentid" UUID REFERENCES "users"("id") ON DELETE CASCADE,
   "counselorid" UUID REFERENCES "users"("id") ON DELETE SET NULL,
-  "status" TEXT DEFAULT 'pending',
+  "status" TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in-progress', 'approved', 'rejected', 'completed', 'archived')),
   "scheduled_date" TIMESTAMP WITH TIME ZONE,
   "topic_category" TEXT,
   "private_notes" TEXT,
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS "school_transfers" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "studentid" UUID REFERENCES "users"("id") ON DELETE CASCADE,
   "counselorid" UUID REFERENCES "users"("id") ON DELETE SET NULL,
-  "status" TEXT DEFAULT 'pending',
+  "status" TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in-progress', 'approved', 'rejected', 'completed', 'archived')),
   "target_school" TEXT NOT NULL,
   "reason_category" TEXT NOT NULL,
   "detailed_reason" TEXT,
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS "wellness_checkins" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "studentid" UUID REFERENCES "users"("id") ON DELETE CASCADE,
   "counselorid" UUID REFERENCES "users"("id") ON DELETE SET NULL,
-  "status" TEXT DEFAULT 'pending',
+  "status" TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed')),
   "mood_score" INTEGER CHECK (mood_score >= 1 AND mood_score <= 5),
   "checkin_notes" TEXT,
   "created_at" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
@@ -198,6 +198,9 @@ DROP POLICY IF EXISTS "Users can update own data" ON "users";
 DROP POLICY IF EXISTS "Counselors update users" ON "users";
 DROP POLICY IF EXISTS "public_anon_users" ON "users";
 DROP POLICY IF EXISTS "Users insert own profile" ON "users";
+DROP POLICY IF EXISTS "users_select" ON "users";
+DROP POLICY IF EXISTS "users_update_own" ON "users";
+DROP POLICY IF EXISTS "users_update_counselor" ON "users";
 
 -- SELECT: Students see own profile + all counselor profiles; Counselors see everyone
 CREATE POLICY "users_select" ON "users" FOR SELECT TO authenticated
@@ -234,6 +237,9 @@ ALTER TABLE "appointments" ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Students manage own appointments" ON "appointments";
 DROP POLICY IF EXISTS "Counselors read all appointments" ON "appointments";
 DROP POLICY IF EXISTS "Counselors update appointments" ON "appointments";
+DROP POLICY IF EXISTS "appointments_select" ON "appointments";
+DROP POLICY IF EXISTS "appointments_insert" ON "appointments";
+DROP POLICY IF EXISTS "appointments_update" ON "appointments";
 
 -- SELECT: Students see own; Counselors see all
 CREATE POLICY "appointments_select" ON "appointments" FOR SELECT TO authenticated
@@ -268,6 +274,9 @@ ALTER TABLE "school_transfers" ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Students manage own transfers" ON "school_transfers";
 DROP POLICY IF EXISTS "Counselors read all transfers" ON "school_transfers";
 DROP POLICY IF EXISTS "Counselors update transfers" ON "school_transfers";
+DROP POLICY IF EXISTS "transfers_select" ON "school_transfers";
+DROP POLICY IF EXISTS "transfers_insert" ON "school_transfers";
+DROP POLICY IF EXISTS "transfers_update" ON "school_transfers";
 
 -- SELECT: Students see own; Counselors see all
 CREATE POLICY "transfers_select" ON "school_transfers" FOR SELECT TO authenticated
@@ -302,6 +311,9 @@ ALTER TABLE "wellness_checkins" ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Students manage own checkins" ON "wellness_checkins";
 DROP POLICY IF EXISTS "Counselors read all checkins" ON "wellness_checkins";
 DROP POLICY IF EXISTS "Counselors update checkins" ON "wellness_checkins";
+DROP POLICY IF EXISTS "checkins_select" ON "wellness_checkins";
+DROP POLICY IF EXISTS "checkins_insert" ON "wellness_checkins";
+DROP POLICY IF EXISTS "checkins_update" ON "wellness_checkins";
 
 -- SELECT: Students see own; Counselors see all
 CREATE POLICY "checkins_select" ON "wellness_checkins" FOR SELECT TO authenticated
@@ -338,6 +350,10 @@ DROP POLICY IF EXISTS "Counselors insert case notes" ON "case_notes";
 DROP POLICY IF EXISTS "Counselors update case notes" ON "case_notes";
 DROP POLICY IF EXISTS "Counselors delete case notes" ON "case_notes";
 DROP POLICY IF EXISTS "Counselors manage case notes" ON "case_notes";
+DROP POLICY IF EXISTS "case_notes_select" ON "case_notes";
+DROP POLICY IF EXISTS "case_notes_insert" ON "case_notes";
+DROP POLICY IF EXISTS "case_notes_update" ON "case_notes";
+DROP POLICY IF EXISTS "case_notes_delete" ON "case_notes";
 
 -- ALL operations: Counselors only. Students have ZERO access.
 CREATE POLICY "case_notes_select" ON "case_notes" FOR SELECT TO authenticated
@@ -376,6 +392,8 @@ ALTER TABLE "messages" ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Student read own messages, Counselors read all" ON "messages";
 DROP POLICY IF EXISTS "Users insert own messages" ON "messages";
 DROP POLICY IF EXISTS "public_anon_messages" ON "messages";
+DROP POLICY IF EXISTS "messages_select" ON "messages";
+DROP POLICY IF EXISTS "messages_insert" ON "messages";
 
 -- SELECT: Participants in the conversation, or any counselor
 CREATE POLICY "messages_select" ON "messages" FOR SELECT TO authenticated
@@ -400,6 +418,9 @@ ALTER TABLE "notifications" ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can read own notifications" ON "notifications";
 DROP POLICY IF EXISTS "public_anon_notifications" ON "notifications";
 DROP POLICY IF EXISTS "notifications_insert_system" ON "notifications";
+DROP POLICY IF EXISTS "notifications_select" ON "notifications";
+DROP POLICY IF EXISTS "notifications_update" ON "notifications";
+DROP POLICY IF EXISTS "notifications_insert" ON "notifications";
 
 -- SELECT: Users read their own notifications
 CREATE POLICY "notifications_select" ON "notifications" FOR SELECT TO authenticated
