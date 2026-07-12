@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS "appointments" (
   "scheduled_date" TIMESTAMP WITH TIME ZONE,
   "topic_category" TEXT,
   "private_notes" TEXT,
+  "counselor_notes" TEXT,
   "created_at" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
@@ -88,6 +89,7 @@ CREATE TABLE IF NOT EXISTS "school_transfers" (
   "target_school" TEXT NOT NULL,
   "reason_category" TEXT NOT NULL,
   "detailed_reason" TEXT,
+  "counselor_notes" TEXT,
   "transfer_forms_url" TEXT,
   "academic_records_url" TEXT,
   "id_documents_url" TEXT,

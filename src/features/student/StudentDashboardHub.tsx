@@ -144,10 +144,10 @@ export default function StudentDashboardHub() {
       status: a.status,
       submissionDate: a.created_at,
       reasonCategory: a.topic_category,
-      details: a.private_notes,
+      details: a.notes,
       choice1: a.scheduled_date ? new Date(a.scheduled_date).toLocaleString() : 'N/A',
       scheduledAt: a.scheduled_date,
-      counselorNotes: null,
+      counselorNotes: a.counselor_notes || null,
       resolvedByName: a.users?.name || 'N/A',
       assignedTo: a.counselorid || null
     }));
@@ -159,7 +159,7 @@ export default function StudentDashboardHub() {
       submissionDate: t.created_at,
       targetSchool: t.target_school,
       reason: t.detailed_reason,
-      counselorNotes: null,
+      counselorNotes: t.counselor_notes || null,
       assignedTo: t.counselorid || null
     }));
     

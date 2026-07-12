@@ -47,6 +47,7 @@ export default function CaseDetailSidebar({ request, onClose, user, onStartChat 
 
   const submitSaveNotes = async () => {
     if (notes || privateNotes) {
+       // Log into historical case notes
        await supabase.from('case_notes').insert({
          studentid: request.studentid,
          counselorid: user.id,
@@ -54,6 +55,15 @@ export default function CaseDetailSidebar({ request, onClose, user, onStartChat 
          content: `Visible Notes: ${notes}\nPrivate Notes: ${privateNotes}`,
          note_type: 'update'
        });
+       
+       // Also update the active request with the visible notes so the student can see it
+       if (notes) {
+         const table = getTableName();
+         await supabase.from(table).update({ counselor_notes: notes }).eq('id', request.id);
+         queryClient.invalidateQueries({ queryKey: ['appointments'] });
+         queryClient.invalidateQueries({ queryKey: ['school_transfers'] });
+       }
+       
        queryClient.invalidateQueries({ queryKey: ['case_notes'] });
        alert("Notes saved successfully");
     }
