@@ -29,6 +29,14 @@ SAINA Care Portal is a modern, comprehensive, and mobile-optimized web applicati
 
 ---
 
+## 🏛️ Architecture & Maintainability
+
+We take code quality seriously. SAINA Care Portal follows a strict feature-driven architecture and utilizes advanced React patterns (like code-splitting and dynamic `lazy()` imports) to keep bundle sizes minimal. 
+
+For a deep dive into how the codebase is structured, check out our **[Architecture Documentation](docs/ARCHITECTURE.md)**.
+
+---
+
 ## 🚀 Tech Stack
 
 * **Frontend Framework:** React 18 (Vite) + TypeScript
