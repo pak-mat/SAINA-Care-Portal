@@ -1,5 +1,6 @@
 // File: src/features/student/components/PermissionForm.tsx
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { motion } from 'motion/react';
 import { UploadCloud, FileText, CheckCircle, HelpCircle } from 'lucide-react';
 
@@ -23,7 +24,7 @@ export default function PermissionForm({ onDone, user }: any) {
       onDone();
     } else {
       console.error("Error creating transfer request:", error);
-      alert("Failed to submit request.");
+      toast.error("Failed to submit request.");
     }
   };
 

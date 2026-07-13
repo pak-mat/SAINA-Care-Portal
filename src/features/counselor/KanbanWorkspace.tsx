@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
 import { motion } from 'motion/react';
 import { Inbox, MessageSquare, Users, InboxIcon, Loader2, FileDown } from 'lucide-react';
 import PriorityCard from '../../components/ui/PriorityCard';
@@ -47,7 +48,7 @@ function ExportPDFButton({ requests, userName }: ExportPDFButtonProps) {
       await generateAppointmentPDF(requests, userName);
     } catch (err) {
       console.error('PDF generation failed:', err);
-      alert('Failed to generate PDF. Please try again.');
+      toast.error('Failed to generate PDF. Please try again.');
     } finally {
       setGenerating(false);
     }

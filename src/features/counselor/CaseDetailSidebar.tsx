@@ -1,5 +1,6 @@
 // File: src/features/counselor/CaseDetailSidebar.jsx
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckSquare, XSquare, FileText, Send, Hand, Save } from 'lucide-react';
@@ -65,7 +66,7 @@ export default function CaseDetailSidebar({ request, onClose, user, onStartChat 
        }
        
        queryClient.invalidateQueries({ queryKey: ['case_notes'] });
-       alert("Notes saved successfully");
+       toast.success("Notes saved successfully");
     }
   };
 

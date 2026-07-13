@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, ChevronRight, FileText, Download, X, Paperclip, Send } from 'lucide-react';
 import { useDirectMessages, useCounselorConversations } from '../../hooks/useGroupChat';
@@ -83,7 +84,7 @@ export default function CounselorChatTab({ user, defaultStudentId, requests }: C
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.size > 10 * 1024 * 1024) {
-        alert('File size exceeds 10MB limit.');
+        toast.error('File size exceeds 10MB limit.');
         e.target.value = '';
         return;
       }

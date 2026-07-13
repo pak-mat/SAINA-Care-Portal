@@ -7,8 +7,9 @@ export interface User {
   email: string;
   password?: string;
   role: Role;
-  studentId?: string; // specific to student
-  status?: 'Available' | 'Busy' | 'Away';
+  studentId?: string;
+  studentid?: string; // DB schema
+  status?: 'Available' | 'Busy' | 'Away' | 'Archived';
   signature?: string;
   bio?: string;
   bannerStyle?: string;
@@ -19,7 +20,8 @@ export interface User {
   form?: string;
   gender?: string;
   age?: string;
-  riskLevel?: 'Low' | 'Medium' | 'High' | 'Crisis';
+  riskLevel?: 'Low' | 'Medium' | 'High' | 'Crisis' | 'Critical';
+  risklevel?: 'Low' | 'Medium' | 'High' | 'Crisis' | 'Critical'; // DB schema
   account_status?: 'Active' | 'Suspended' | 'Graduated' | 'Archived';
   guardian_name?: string;
   emergency_contact?: string;

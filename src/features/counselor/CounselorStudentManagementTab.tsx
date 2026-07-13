@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { createPortal } from 'react-dom';
 import { 
   GraduationCap, 
@@ -18,9 +19,10 @@ import { getRelativeTime } from '../../utils/time';
 import { supabase } from '../../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'motion/react';
+import { User } from '../../types';
 
 // Custom Dropdown Component
-function Dropdown({ icon: Icon, label, options, value, onChange }: any) {
+function Dropdown({ icon: Icon, label, options, value, onChange }: { icon: any, label: string, options: (string | {value: string, label: string})[], value: string, onChange: (val: string) => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -80,7 +82,7 @@ function Dropdown({ icon: Icon, label, options, value, onChange }: any) {
 }
 
 // Side Panel Drawer
-function StudentProfileDrawer({ isOpen, onClose, student, onSave }: any) {
+function StudentProfileDrawer({ isOpen, onClose, student, onSave }: { isOpen: boolean, onClose: () => void, student: User | null, onSave: (data: Partial<User>) => void }) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [name, setName] = useState('');
@@ -420,7 +422,7 @@ export default function CounselorStudentManagementTab() {
   const itemsPerPage = 10;
   
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [editingStudent, setEditingStudent] = useState<User | null>(null);
 
   const { data: studentsData, isLoading: loading } = useStudents(currentPage, itemsPerPage, searchQuery, filterForm, filterRisk, filterActive);
   const students = studentsData?.data || [];
@@ -430,12 +432,12 @@ export default function CounselorStudentManagementTab() {
 
   useEffect(() => { setCurrentPage(1); }, [searchQuery, filterForm, filterRisk, filterActive]);
 
-  const handleSelectAll = (e: any) => {
-    if (e.target.checked) setSelectedIds(new Set(students.map((s: any) => s.id)));
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) setSelectedIds(new Set(students.map((s: User) => s.id)));
     else setSelectedIds(new Set());
   };
 
-  const handleSelectRow = (id: string, e: any) => {
+  const handleSelectRow = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const newSet = new Set(selectedIds);
     if (newSet.has(id)) newSet.delete(id);
@@ -443,25 +445,25 @@ export default function CounselorStudentManagementTab() {
     setSelectedIds(newSet);
   };
 
-  const handleViewStudent = (student: any, e?: any) => {
+  const handleViewStudent = (student: User, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setEditingStudent(student);
     setDrawerOpen(true);
   };
 
-  const handleUpdateStudent = async (data: any) => {
+  const handleUpdateStudent = async (data: Partial<User>) => {
     if (!editingStudent) return;
     const { error } = await supabase.from('users').update(data).eq('id', editingStudent.id);
     if (error) {
       console.error('Update error:', error);
-      alert(`Failed to update profile: ${error.message}`);
+      toast.error(`Failed to update profile: ${error.message}`);
       return;
     }
     queryClient.invalidateQueries({ queryKey: ['students'] });
     setDrawerOpen(false);
   };
 
-  const handleArchive = async (id: string, e: any) => {
+  const handleArchive = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm("Archive this student? They will lose access but records will be kept.")) {
       await supabase.from('users').update({ status: 'Archived' }).eq('id', id);
@@ -565,7 +567,7 @@ export default function CounselorStudentManagementTab() {
                         <td colSpan={6} className="py-12 text-center text-slate-400 text-sm font-medium">No students found matching filters.</td>
                       </tr>
                     ) : (
-                      students.map((student: any) => (
+                      students.map((student: User) => (
                         <tr key={student.id} onClick={() => handleViewStudent(student)} className="hover:bg-slate-50/80 dark:hover:bg-zinc-800/50 cursor-pointer group transition-colors">
                           <td className="p-4 text-center" onClick={e => e.stopPropagation()}>
                             <input type="checkbox" checked={selectedIds.has(student.id)} onChange={(e) => handleSelectRow(student.id, e)} className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />

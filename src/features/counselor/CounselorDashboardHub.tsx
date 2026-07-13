@@ -1,6 +1,5 @@
-// @ts-nocheck
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { MessageSquare, MessageCircle, Settings, KanbanSquare, CalendarDays, Compass, Users, ArrowRight } from 'lucide-react';
+import { MessageSquare, MessageCircle, Settings, KanbanSquare, CalendarDays, Compass, Users, ArrowRight, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 import { useDatabaseEvent } from '../../hooks/useDatabaseEvent';
@@ -16,6 +15,7 @@ const CaseDetailSidebar = lazy(() => import('./CaseDetailSidebar'));
 const CounselorStudentManagementTab = lazy(() => import('./CounselorStudentManagementTab'));
 const KanbanWorkspace = lazy(() => import('./KanbanWorkspace'));
 const CounselorChatTab = lazy(() => import('./CounselorChatTab'));
+const CounselorArchiveSearchTab = lazy(() => import('./CounselorArchiveSearchTab'));
 
 export default function CounselorDashboardHub() {
   const { user, logout } = useAuth();
@@ -45,6 +45,7 @@ export default function CounselorDashboardHub() {
 
   const tabs = [
     { id: 'workspace', label: 'Triage', icon: KanbanSquare },
+    { id: 'archive', label: 'Archive & Search', icon: Search },
     { id: 'students', label: 'Students', icon: Users },
     { id: 'profiles', label: 'My Profiles', icon: Compass },
     { id: 'chat', label: 'Chat', icon: MessageSquare },
@@ -186,6 +187,11 @@ export default function CounselorDashboardHub() {
           <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div></div>}>
             <AnimatePresence mode="wait">
               {activeTab === 'workspace' && <KanbanWorkspace key="workspace" requests={requests} user={user} onSelectCase={setSelectedCase} />}
+              {activeTab === 'archive' && (
+                <div key="archive" className="h-full w-full">
+                  <CounselorArchiveSearchTab requests={requests} onSelectCase={setSelectedCase} />
+                </div>
+              )}
               {activeTab === 'students' && (
                 <div key="students" className="h-full w-full overflow-y-auto p-4 sm:p-6 lg:p-8">
                   <CounselorStudentManagementTab />

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { motion } from 'motion/react';
 import { Calendar as CalendarIcon, Info, Sparkles } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
@@ -97,7 +98,7 @@ export default function AppointmentForm({ onDone, user }: AppointmentFormProps) 
       onDone();
     } else {
       console.error("Error creating appointment:", error);
-      alert("Failed to schedule appointment. Please try again.");
+      toast.error("Failed to schedule appointment. Please try again.");
     }
   };
 

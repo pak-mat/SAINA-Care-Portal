@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'motion/react';
 import { getRelativeTime } from '../../../utils/time';
 import { ChevronRight, ImagePlus, Send, X, MessageSquare, Loader2, Paperclip, FileText, Download, Search, Plus, Users, Check } from 'lucide-react';
@@ -80,7 +81,7 @@ export default function StudentChatTab({ user, requests }) {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.size > 10 * 1024 * 1024) {
-        alert('File size exceeds 10MB limit.');
+        toast.error('File size exceeds 10MB limit.');
         e.target.value = '';
         return;
       }
