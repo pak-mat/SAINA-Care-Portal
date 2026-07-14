@@ -36,6 +36,7 @@
     "pg": "^8.22.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
+    "react-hook-form": "^7.81.0",
     "react-hot-toast": "^2.6.0",
     "react-intersection-observer": "^10.0.3",
     "react-router-dom": "^7.18.0",

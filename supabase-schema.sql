@@ -8,6 +8,7 @@
 DROP TABLE IF EXISTS "notifications" CASCADE;
 DROP TABLE IF EXISTS "messages" CASCADE;
 DROP TABLE IF EXISTS "requests" CASCADE;
+DROP TABLE IF EXISTS "student_intakes" CASCADE;
 DROP TABLE IF EXISTS "users" CASCADE;
 
 -- 2. Recreate Tables
@@ -71,6 +72,16 @@ CREATE TABLE "notifications" (
   "date" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+CREATE TABLE "student_intakes" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "studentid" UUID REFERENCES "users"("id") ON DELETE CASCADE UNIQUE,
+  "family_background" TEXT,
+  "medical_history" TEXT,
+  "previous_counseling" BOOLEAN DEFAULT false,
+  "counseling_goals" TEXT,
+  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
 -- 3. Enable Rules & Fix the Row-Level Security (RLS) Errors
 ALTER TABLE "users" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read own data or counselors read all" ON "users" FOR SELECT USING (
@@ -98,6 +109,17 @@ CREATE POLICY "Users insert own messages" ON "messages" FOR INSERT WITH CHECK (
 );
 
 ALTER TABLE "notifications" ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE "student_intakes" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Student read own intake, Counselors read all" ON "student_intakes" FOR SELECT USING (
+  studentid = auth.uid() OR (auth.jwt() -> 'user_metadata' ->> 'role') = 'counselor' OR auth.role() = 'service_role'
+);
+CREATE POLICY "Students insert own intake" ON "student_intakes" FOR INSERT WITH CHECK (
+  studentid = auth.uid() OR auth.role() = 'service_role'
+);
+CREATE POLICY "Students update own intake" ON "student_intakes" FOR UPDATE USING (
+  studentid = auth.uid() OR auth.role() = 'service_role'
+);
 CREATE POLICY "Users can read own notifications" ON "notifications" FOR SELECT USING (userid = auth.uid() OR auth.role() = 'service_role');
 
 

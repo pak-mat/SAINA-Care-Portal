@@ -7,8 +7,8 @@ import { generateAppointmentPDF, ReportRequest } from './AppointmentPDFReport';
 import { User, BaseRequest } from '../../types';
 
 export interface KanbanRequest extends ReportRequest {
-  counselorid?: string | null;
-  studentid?: string;
+  assignedTo?: string | null;
+  studentId?: string;
 }
 
 const EMPTY_STATES: Record<string, any> = {
@@ -80,9 +80,9 @@ interface KanbanWorkspaceProps {
 }
 
 export default function KanbanWorkspace({ requests, user, onSelectCase }: KanbanWorkspaceProps) {
-  const pool = useMemo(() => requests.filter(r => r.status === 'pending' && !r.counselorid), [requests]);
-  const active = useMemo(() => requests.filter(r => r.status === 'in-progress' && r.counselorid === user.id), [requests, user.id]);
-  const awaiting = useMemo(() => requests.filter(r => r.status === 'pending' && r.counselorid === user.id), [requests, user.id]);
+  const pool = useMemo(() => requests.filter(r => r.status === 'pending' && !r.assignedTo), [requests]);
+  const active = useMemo(() => requests.filter(r => r.status === 'in-progress' && r.assignedTo === user.id), [requests, user.id]);
+  const awaiting = useMemo(() => requests.filter(r => r.status === 'pending' && r.assignedTo === user.id), [requests, user.id]);
   const archived = useMemo(() => requests.filter(r => ['approved', 'rejected'].includes(r.status)), [requests]);
 
   const columns = useMemo(() => [

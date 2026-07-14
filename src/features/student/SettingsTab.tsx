@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
+import ProfileSettings from './components/ProfileSettings';
+import AppearanceSettings from './components/AppearanceSettings';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -17,22 +20,40 @@ export default function SettingsTab() {
   const { user, updateUser, logout } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   
-  const [name, setName] = useState(user?.name || '');
-  const [studentId, setStudentId] = useState(user?.studentId || '');
-  const [bio, setBio] = useState(user?.bio || 'Saina Care Student active in campus self-care initiatives.');
-  const [bannerStyle, setBannerStyle] = useState(user?.bannerStyle || 'indigo_dusk');
-  const [avatarColor, setAvatarColor] = useState(user?.avatarColor || 'indigo');
-  const [interests, setInterests] = useState(user?.interests || ['Academics', 'Self-Care', 'Peer Support']);
-  const [newInterest, setNewInterest] = useState('');
+  const methods = useForm<any>({
+    defaultValues: {
+      name: user?.name || '',
+      studentId: user?.studentId || '',
+      bio: user?.bio || 'Saina Care Student active in campus self-care initiatives.',
+      bannerStyle: user?.bannerStyle || 'indigo_dusk',
+      avatarColor: user?.avatarColor || 'indigo',
+      interests: user?.interests || ['Academics', 'Self-Care', 'Peer Support'],
+      linkedIn: user?.socialHandles?.linkedIn || '',
+      twitter: user?.socialHandles?.twitter || '',
+      instagram: user?.socialHandles?.instagram || '',
+      website: user?.socialHandles?.website || '',
+      uiSound: user?.preferences?.uiSound ?? true,
+      notificationsEnabled: user?.preferences?.notificationsEnabled ?? true,
+    }
+  });
+
+  const { watch, handleSubmit, setValue } = methods;
   
-  const [linkedIn, setLinkedIn] = useState(user?.socialHandles?.linkedIn || '');
-  const [twitter, setTwitter] = useState(user?.socialHandles?.twitter || '');
-  const [instagram, setInstagram] = useState(user?.socialHandles?.instagram || '');
-  const [website, setWebsite] = useState(user?.socialHandles?.website || '');
-  
-  const [uiSound, setUiSound] = useState(user?.preferences?.uiSound ?? true);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(user?.preferences?.notificationsEnabled ?? true);
   const [saved, setSaved] = useState(false);
+  
+  // Watch values for preview
+  const name = watch('name');
+  const studentId = watch('studentId');
+  const bio = watch('bio');
+  const bannerStyle = watch('bannerStyle');
+  const avatarColor = watch('avatarColor');
+  const interests = watch('interests');
+  const linkedIn = watch('linkedIn');
+  const twitter = watch('twitter');
+  const instagram = watch('instagram');
+  const website = watch('website');
+  const uiSound = watch('uiSound');
+  const notificationsEnabled = watch('notificationsEnabled');
 
   const bannerPresets = [
     { id: 'indigo_dusk', name: 'Indigo Dusk', class: 'bg-gradient-to-r from-violet-600 to-indigo-600' },
@@ -55,16 +76,25 @@ export default function SettingsTab() {
   const activeBanner = bannerPresets.find(p => p.id === bannerStyle) || bannerPresets[0];
   const activeAvatar = avatarPresets.find(p => p.id === avatarColor) || avatarPresets[0];
 
-  const handleSave = async () => {
+  const handleSave = async (formData: any) => {
     const dataToUpdate = {
-      name,
-      studentid: studentId, // Map studentId to studentid database column
-      bio,
-      bannerStyle,
-      avatarColor,
-      interests,
-      socialHandles: { linkedIn, twitter, instagram, website },
-      preferences: { ...user.preferences, uiSound, notificationsEnabled }
+      name: formData.name,
+      studentid: formData.studentId, // Map studentId to studentid database column
+      bio: formData.bio,
+      bannerStyle: formData.bannerStyle,
+      avatarColor: formData.avatarColor,
+      interests: formData.interests,
+      socialHandles: { 
+        linkedIn: formData.linkedIn, 
+        twitter: formData.twitter, 
+        instagram: formData.instagram, 
+        website: formData.website 
+      },
+      preferences: { 
+        ...user.preferences, 
+        uiSound: formData.uiSound, 
+        notificationsEnabled: formData.notificationsEnabled 
+      }
     };
 
     // Save to Supabase
@@ -84,20 +114,7 @@ export default function SettingsTab() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const handleAddInterest = (e) => {
-    e.preventDefault();
-    if (!newInterest.trim()) return;
-    if (interests.includes(newInterest.trim())) {
-      setNewInterest('');
-      return;
-    }
-    setInterests([...interests, newInterest.trim()]);
-    setNewInterest('');
-  };
 
-  const handleRemoveInterest = (item) => {
-    setInterests(interests.filter(i => i !== item));
-  };
 
   const [activeSettingsTab, setActiveSettingsTab] = useState('profile');
   const [showConfirm, setShowConfirm] = useState(false);
@@ -116,8 +133,9 @@ export default function SettingsTab() {
   };
 
   return (
-    <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}} className="max-w-6xl mx-auto pb-12 px-4 sm:px-6">
-      <div className="mb-8 overflow-hidden bg-gradient-to-r from-emerald-900 to-slate-900 dark:from-emerald-950 dark:to-black rounded-[1.75rem] p-8 sm:p-10 relative shadow-lg">
+    <FormProvider {...methods}>
+      <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}} className="max-w-6xl mx-auto pb-12 px-4 sm:px-6">
+        <div className="mb-8 overflow-hidden bg-gradient-to-r from-emerald-900 to-slate-900 dark:from-emerald-950 dark:to-black rounded-[1.75rem] p-8 sm:p-10 relative shadow-lg">
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 opacity-20 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/4 pointer-events-none"></div>
         <div className="relative z-10">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2 flex items-center gap-2 tracking-tight" style={{ fontFamily: 'Montserrat, sans-serif' }}>
@@ -245,142 +263,7 @@ export default function SettingsTab() {
           {activeSettingsTab === 'profile' && (
             <div className="space-y-6">
           {/* Section 1: Profile customization details */}
-          <div className="glass-panel shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-white/50 dark:border-zinc-800/50 bg-slate-50/50 dark:bg-zinc-900/30 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center border border-emerald-100 dark:border-emerald-800/50 shadow-sm">
-                <User size={18} className="text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-zinc-100 tracking-tight">Customize Social Presence</h3>
-            </div>
-
-            <div className="p-6 space-y-6">
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <User size={12} /> Full Display Name
-                  </label>
-                  <input 
-                    type="text" 
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 dark:bg-zinc-900/60 text-slate-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-800 transition-all shadow-inner"
-                    placeholder="e.g. Sarah Connor"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <CreditCard size={12} /> Student ID String
-                  </label>
-                  <input 
-                    type="text" 
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
-                    className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 dark:bg-zinc-900/60 text-slate-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-800 transition-all shadow-inner"
-                    placeholder="e.g. S91280X"
-                  />
-                </div>
-              </div>
-
-              {/* Bio design */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
-                  My Bio / Introduction
-                </label>
-                <textarea 
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value.slice(0, 160))}
-                  className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 dark:bg-zinc-900/60 text-slate-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-800 transition-all shadow-inner h-24 resize-none"
-                  placeholder="Introduce yourself to counselors, e.g., 'Freshman studying clinical psychology. Enjoy quiet study spots and mental health advocacy.'"
-                />
-                <div className="flex justify-between mt-1 text-[11px] text-slate-400 dark:text-zinc-500">
-                  <span>Show off your vibe to counselors when booking sessions.</span>
-                  <span>{bio.length}/160 characters</span>
-                </div>
-              </div>
-
-              {/* Gradient Banner and Avatar Colors Presets */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-                <div>
-                  <span className="block text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider mb-2.5">
-                    Cover Banner Styling
-                  </span>
-                  <div className="flex flex-wrap gap-2.5">
-                    {bannerPresets.map(preset => (
-                      <button 
-                        key={preset.id}
-                        type="button"
-                        onClick={() => setBannerStyle(preset.id)}
-                        className={`w-9 h-9 rounded-full ${preset.class} transition-transform flex items-center justify-center border-2 ${bannerStyle === preset.id ? 'border-emerald-600 scale-110 shadow-md ring-2 ring-emerald-500/20' : 'border-transparent hover:scale-105'}`}
-                        title={preset.name}
-                      >
-                        {bannerStyle === preset.id && <Sparkles size={11} className="text-white" />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <span className="block text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider mb-2.5">
-                    Profile Avatar Accent
-                  </span>
-                  <div className="flex flex-wrap gap-2.5">
-                    {avatarPresets.map(preset => (
-                      <button 
-                        key={preset.id}
-                        type="button"
-                        onClick={() => setAvatarColor(preset.id)}
-                        className={`w-9 h-9 rounded-full ${preset.bg} transition-all flex items-center justify-center border-2 ${avatarColor === preset.id ? 'border-slate-800 dark:border-zinc-100 scale-110 ring-2 ring-slate-400/20 shadow' : 'border-transparent hover:scale-105'}`}
-                      >
-                        {avatarColor === preset.id && <CheckCircle size={12} />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Tags Interactivity */}
-              <div className="pt-2">
-                <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Tag size={12} /> Add Focus Interests & Skills
-                </label>
-                <form onSubmit={handleAddInterest} className="flex gap-2 mb-3">
-                  <input 
-                    type="text"
-                    value={newInterest}
-                    onChange={(e) => setNewInterest(e.target.value)}
-                    placeholder="e.g. Stress Relief, Meditation, Peer Tutoring"
-                    className="flex-1 border border-slate-200 dark:border-zinc-700 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 transition-all"
-                  />
-                  <button 
-                    type="submit"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-4 rounded-xl flex items-center gap-1.5 transition-colors"
-                  >
-                    <Plus size={14} /> Add Choice
-                  </button>
-                </form>
-
-                <div className="flex flex-wrap gap-1.5 p-3 bg-slate-50 dark:bg-zinc-900/40 rounded-xl border border-slate-150 dark:border-zinc-700/45 min-h-[50px]">
-                  {interests.map((it) => (
-                    <span 
-                      key={it}
-                      onClick={() => handleRemoveInterest(it)}
-                      className="bg-slate-200 dark:bg-zinc-700 hover:bg-red-100 dark:hover:bg-red-950/40 text-slate-700 dark:text-zinc-300 hover:text-red-700 dark:hover:text-red-400 text-xs px-2.5 py-1.5 rounded-full font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
-                      title="Click to remove"
-                    >
-                      {it}
-                      <Trash2 size={11} className="opacity-70" />
-                    </span>
-                  ))}
-                  {interests.length === 0 && (
-                    <span className="text-xs text-slate-400 dark:text-zinc-500 italic p-1">No custom interests entered. Add some tags above to stand out!</span>
-                  )}
-                </div>
-              </div>
-
-            </div>
-          </div>
+          <ProfileSettings />
           </div>
           )}
 
@@ -404,8 +287,7 @@ export default function SettingsTab() {
                   </span>
                   <input 
                     type="text" 
-                    value={linkedIn}
-                    onChange={(e) => setLinkedIn(e.target.value)}
+                    {...methods.register('linkedIn')}
                     className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 outline-none focus:bg-white dark:focus:bg-zinc-800 transition-all font-medium"
                     placeholder="https://linkedin.com/in/username"
                   />
@@ -420,8 +302,7 @@ export default function SettingsTab() {
                   </span>
                   <input 
                     type="text" 
-                    value={twitter}
-                    onChange={(e) => setTwitter(e.target.value)}
+                    {...methods.register('twitter')}
                     className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 outline-none focus:bg-white dark:focus:bg-zinc-800 transition-all font-medium"
                     placeholder="@username"
                   />
@@ -436,8 +317,7 @@ export default function SettingsTab() {
                   </span>
                   <input 
                     type="text" 
-                    value={instagram}
-                    onChange={(e) => setInstagram(e.target.value)}
+                    {...methods.register('instagram')}
                     className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 outline-none focus:bg-white dark:focus:bg-zinc-800 transition-all font-medium"
                     placeholder="@username"
                   />
@@ -452,8 +332,7 @@ export default function SettingsTab() {
                   </span>
                   <input 
                     type="text" 
-                    value={website}
-                    onChange={(e) => setWebsite(e.target.value)}
+                    {...methods.register('website')}
                     className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 outline-none focus:bg-white dark:focus:bg-zinc-800 transition-all font-medium"
                     placeholder="https://mywebsite.com"
                   />
@@ -468,74 +347,11 @@ export default function SettingsTab() {
             <div className="space-y-6">
           {/* Section 3: Hardware preferences & system tweaks */}
           <div className="glass-panel shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-white/50 dark:border-zinc-800/50 bg-slate-50/50 dark:bg-zinc-900/30 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center border border-emerald-100 dark:border-emerald-800/50 shadow-sm">
-                <Settings2 size={18} className="text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-zinc-100 tracking-tight">Appearance & Settings</h3>
-            </div>
-
-            <div className="p-6 space-y-6">
-              <div className="flex items-center justify-between gap-4 max-w-xl">
-                <div>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-zinc-200">Dark Application Theme</p>
-                  <p className="text-xs text-slate-400 dark:text-zinc-500">Enable deep eye-friendly dark colors for evening sessions</p>
-                </div>
-                <motion.button 
-                  type="button"
-                  onClick={toggleDarkMode}
-                  className={`shrink-0 w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${darkMode ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-zinc-600'}`}
-                  layout
-                >
-                  <motion.div 
-                    className="bg-white w-4 h-4 rounded-full shadow"
-                    layout
-                    initial={false}
-                    animate={{ x: darkMode ? 24 : 0 }}
-                  />
-                </motion.button>
-              </div>
-
-              <div className="flex items-center justify-between gap-4 max-w-xl border-t border-slate-100 dark:border-zinc-700/40 pt-4">
-                <div>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-zinc-200">Haptic UI Chimes</p>
-                  <p className="text-xs text-slate-400 dark:text-zinc-500">Triggers calming, subtle therapeutic chimes on key events</p>
-                </div>
-                <motion.button 
-                  type="button"
-                  onClick={() => setUiSound(!uiSound)}
-                  className={`shrink-0 w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${uiSound ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-zinc-600'}`}
-                  layout
-                >
-                  <motion.div 
-                    className="bg-white w-4 h-4 rounded-full shadow"
-                    layout
-                    initial={false}
-                    animate={{ x: uiSound ? 24 : 0 }}
-                  />
-                </motion.button>
-              </div>
-
-              <div className="flex items-center justify-between gap-4 max-w-xl border-t border-slate-100 dark:border-zinc-700/40 pt-4">
-                <div>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-zinc-200">Live Workspace Signals</p>
-                  <p className="text-xs text-slate-400 dark:text-zinc-500">Pop dynamic notifications and chat updates automatically</p>
-                </div>
-                <motion.button 
-                  type="button"
-                  onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-                  className={`shrink-0 w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${notificationsEnabled ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-zinc-600'}`}
-                  layout
-                >
-                  <motion.div 
-                    className="bg-white w-4 h-4 rounded-full shadow"
-                    layout
-                    initial={false}
-                    animate={{ x: notificationsEnabled ? 24 : 0 }}
-                  />
-                </motion.button>
-              </div>
-            </div>
+            <AppearanceSettings 
+              darkMode={darkMode} toggleDarkMode={toggleDarkMode}
+              uiSound={uiSound} setUiSound={(v: boolean) => setValue('uiSound', v)}
+              notificationsEnabled={notificationsEnabled} setNotificationsEnabled={(v: boolean) => setValue('notificationsEnabled', v)}
+            />
 
             {/* Bottom Form Actions bar */}
             <div className="p-5 border-t border-slate-150 dark:border-zinc-700/60 bg-slate-50 dark:bg-zinc-900/40 flex items-center justify-between">
@@ -545,7 +361,7 @@ export default function SettingsTab() {
               </div>
               <button 
                 type="button"
-                onClick={handleSave}
+                onClick={handleSubmit(handleSave)}
                 className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] shadow"
               >
                 {saved ? <><CheckCircle size={16} /> Saved Successfully</> : <><Save size={16} /> Update Profile</>}
@@ -623,6 +439,7 @@ export default function SettingsTab() {
         </div>
 
       </div>
-    </motion.div>
+      </motion.div>
+    </FormProvider>
   );
 }

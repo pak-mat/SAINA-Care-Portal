@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'motion/react';
 import { Calendar as CalendarIcon, Info, Sparkles } from 'lucide-react';
-import { supabase } from '../../../lib/supabase';
 import { User } from '../../../types';
+import { useCreateAppointment } from '../../../hooks/mutations';
 import { useActiveCounselors } from '../../../hooks/useActiveCounselors';
 import { getAvatarClass } from '../../../utils/uiUtils';
 import CalendarPicker from './CalendarPicker';
@@ -24,6 +24,7 @@ export default function AppointmentForm({ onDone, user }: AppointmentFormProps) 
   const [selectedSlot, setSelectedSlot] = useState<{time: string, counselor: string} | null>(null);
 
   const { data: counselors = [] } = useActiveCounselors();
+  const createAppointment = useCreateAppointment();
 
   const categories = ['Academics', 'Career Guidance', 'Anxiety & Stress', 'Personal Issues'];
 
@@ -85,21 +86,18 @@ export default function AppointmentForm({ onDone, user }: AppointmentFormProps) 
     const scheduledDate = new Date(selectedDate);
     scheduledDate.setHours(hours, mins, 0, 0);
 
-    const { error } = await supabase.from('appointments').insert({
+    createAppointment.mutate({
       studentid: user.id,
       counselorid: counselor ? counselor.id : null,
       status: 'pending',
       scheduled_date: scheduledDate.toISOString(),
       topic_category: category,
       private_notes: details
+    }, {
+      onSuccess: () => {
+        onDone();
+      }
     });
-    
-    if (!error) {
-      onDone();
-    } else {
-      console.error("Error creating appointment:", error);
-      toast.error("Failed to schedule appointment. Please try again.");
-    }
   };
 
   const selectedCounselorProfile = counselors.find(c => c.name === selectedSlot?.counselor);
@@ -259,10 +257,10 @@ export default function AppointmentForm({ onDone, user }: AppointmentFormProps) 
               <div className="pt-6 mt-auto">
                 <button 
                   type="submit" 
-                  disabled={!category || !selectedDate || !selectedSlot || !details} 
+                  disabled={!category || !selectedDate || !selectedSlot || !details || createAppointment.isPending} 
                   className="bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50 disabled:cursor-not-allowed font-bold py-4 px-6 rounded-xl transition-all shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 w-full flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
                 >
-                  Confirm Appointment
+                  {createAppointment.isPending ? 'Scheduling...' : 'Confirm Appointment'}
                   {selectedSlot && <span className="opacity-90 font-semibold bg-white/20 px-2 py-0.5 rounded-md text-xs">{selectedSlot.time}</span>}
                 </button>
               </div>

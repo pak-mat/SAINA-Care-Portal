@@ -2,36 +2,12 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '../lib/supabase';
 import { User } from '@supabase/supabase-js';
 
-// We fetch the extended user profile from the public.users table
-export interface UserProfile {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  studentid?: string;
-  status?: string;
-  preferences?: any;
-  form?: string;
-  gender?: string;
-  age?: string;
-  risklevel?: string;
-  account_status?: string;
-  guardian_name?: string;
-  emergency_contact?: string;
-  assigned_counselor?: string;
-  bio?: string;
-  avatar_color?: string;
-  banner_style?: string;
-  bannerStyle?: string;
-  interests?: string[];
-  social_handles?: any;
-  socialHandles?: any;
-}
+import { User as AppUser } from '../types';
 
 const AuthContext = createContext<any>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loadingApp, setLoadingApp] = useState(true);
 
   // Helper to resolve role from auth session (app_metadata first, then user_metadata)
@@ -59,12 +35,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         role: resolveRole(sessionUser),
       });
     } else if (data) {
-      // Map snake_case db fields to camelCase for backwards compatibility
-      setUser({
-        ...data,
+      // Map snake_case db fields to camelCase
+      const mappedUser: AppUser = {
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        role: data.role,
+        studentId: data.studentid,
+        status: data.status,
+        signature: data.signature,
+        bio: data.bio,
         bannerStyle: data.banner_style || data.bannerStyle,
+        avatarColor: data.avatar_color || data.avatarColor,
+        interests: data.interests,
         socialHandles: data.social_handles || data.socialHandles,
-      } as UserProfile);
+        preferences: data.preferences,
+        form: data.form,
+        gender: data.gender,
+        age: data.age,
+        riskLevel: data.risklevel,
+        accountStatus: data.account_status,
+        guardianName: data.guardian_name,
+        emergencyContact: data.emergency_contact,
+        assignedCounselor: data.assigned_counselor,
+      };
+      setUser(mappedUser);
     }
     setLoadingApp(false);
   };

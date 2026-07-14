@@ -8,7 +8,6 @@ export interface User {
   password?: string;
   role: Role;
   studentId?: string;
-  studentid?: string; // DB schema
   status?: 'Available' | 'Busy' | 'Away' | 'Archived';
   signature?: string;
   bio?: string;
@@ -21,11 +20,10 @@ export interface User {
   gender?: string;
   age?: string;
   riskLevel?: 'Low' | 'Medium' | 'High' | 'Crisis' | 'Critical';
-  risklevel?: 'Low' | 'Medium' | 'High' | 'Crisis' | 'Critical'; // DB schema
-  account_status?: 'Active' | 'Suspended' | 'Graduated' | 'Archived';
-  guardian_name?: string;
-  emergency_contact?: string;
-  assigned_counselor?: string;
+  accountStatus?: 'Active' | 'Suspended' | 'Graduated' | 'Archived';
+  guardianName?: string;
+  emergencyContact?: string;
+  assignedCounselor?: string;
 }
 
 export interface BaseRequest {
@@ -35,10 +33,10 @@ export interface BaseRequest {
   status: RequestStatus;
   submissionDate: string;
   assignedTo?: string | null;
-  claimedAt?: any;
+  claimedAt?: string;
   resolvedBy?: string;
   resolvedByName?: string;
-  resolvedAt?: any;
+  resolvedAt?: string;
   counselorNotes?: string;
   privateCounselorNotes?: string; // Counselor only
 }
@@ -80,9 +78,19 @@ export interface ChatMessage {
   senderId: string;
   text: string;
   imageBase64?: string;
-  file_url?: string;
-  file_name?: string;
-  file_type?: string;
-  file_size?: number;
+  fileUrl?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
   timestamp: string;
+}
+
+export interface StudentIntake {
+  id: string;
+  studentId: string;
+  familyBackground?: string;
+  medicalHistory?: string;
+  previousCounseling?: boolean;
+  counselingGoals?: string;
+  createdAt: string;
 }

@@ -31,9 +31,9 @@ export default function CounselorDashboardHub() {
   }, [directoryUsers]);
   
   const requests = useMemo(() => {
-    const apps = (appointmentsData?.data || []).map(a => ({ ...a, type: 'Appointment', studentName: userNameMap.get(a.studentid) || 'Unknown Student', submissionDate: a.created_at }));
-    const trans = (transfersData?.data || []).map(t => ({ ...t, type: 'Transfer', studentName: userNameMap.get(t.studentid) || 'Unknown Student', submissionDate: t.created_at }));
-    return [...apps, ...trans].sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const apps = (appointmentsData?.data || []).map(a => ({ ...a, studentName: a.studentName || userNameMap.get(a.studentId) || 'Unknown Student' }));
+    const trans = (transfersData?.data || []).map(t => ({ ...t, studentName: t.studentName || userNameMap.get(t.studentId) || 'Unknown Student' }));
+    return [...apps, ...trans].sort((a,b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime());
   }, [appointmentsData, transfersData, userNameMap]);
 
   const [activeTab, setActiveTab] = useState('workspace');
@@ -194,7 +194,10 @@ export default function CounselorDashboardHub() {
               )}
               {activeTab === 'students' && (
                 <div key="students" className="h-full w-full overflow-y-auto p-4 sm:p-6 lg:p-8">
-                  <CounselorStudentManagementTab />
+                  <CounselorStudentManagementTab onStartChat={(studentId) => {
+                    setChatStudentId(studentId);
+                    setActiveTab('chat');
+                  }} />
                 </div>
               )}
               {activeTab === 'profiles' && (

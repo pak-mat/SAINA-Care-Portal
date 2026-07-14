@@ -131,6 +131,18 @@ CREATE TABLE IF NOT EXISTS "case_notes" (
 -- Already exists from original schema. No changes needed.
 
 
+-- ── 2H. Student Intakes ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS "student_intakes" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "studentid" UUID REFERENCES "users"("id") ON DELETE CASCADE UNIQUE,
+  "family_background" TEXT,
+  "medical_history" TEXT,
+  "previous_counseling" BOOLEAN DEFAULT false,
+  "counseling_goals" TEXT,
+  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+
 -- ╔═══════════════════════════════════════════════════════════════╗
 -- ║  SECTION 3: PERFORMANCE INDEXES                               ║
 -- ╚═══════════════════════════════════════════════════════════════╝
@@ -439,7 +451,35 @@ CREATE POLICY "notifications_insert" ON "notifications" FOR INSERT TO authentica
 WITH CHECK (true);
 
 
--- ── 4H. Clean up old requests table policies (if it still exists) ──
+-- ── 4H. Student Intakes ─────────────────────────────────────────
+
+ALTER TABLE "student_intakes" ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "student_intakes_select" ON "student_intakes";
+DROP POLICY IF EXISTS "student_intakes_insert" ON "student_intakes";
+DROP POLICY IF EXISTS "student_intakes_update" ON "student_intakes";
+
+-- SELECT: Students see their own intake, Counselors see all
+CREATE POLICY "student_intakes_select" ON "student_intakes" FOR SELECT TO authenticated
+USING (
+  studentid = (select auth.uid())
+  OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'counselor'
+  OR (auth.jwt() -> 'user_metadata' ->> 'role') = 'counselor'
+);
+
+-- INSERT: Students insert their own
+CREATE POLICY "student_intakes_insert" ON "student_intakes" FOR INSERT TO authenticated
+WITH CHECK (
+  studentid = (select auth.uid())
+);
+
+-- UPDATE: Students update their own (if needed later)
+CREATE POLICY "student_intakes_update" ON "student_intakes" FOR UPDATE TO authenticated
+USING ( studentid = (select auth.uid()) )
+WITH CHECK ( studentid = (select auth.uid()) );
+
+
+-- ── 4I. Clean up old requests table policies (if it still exists) ──
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'requests') THEN
     EXECUTE 'DROP POLICY IF EXISTS "Student read own requests, Counselors read all" ON "requests"';

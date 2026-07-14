@@ -4,28 +4,26 @@ import toast from 'react-hot-toast';
 import { motion } from 'motion/react';
 import { UploadCloud, FileText, CheckCircle, HelpCircle } from 'lucide-react';
 
-import { supabase } from '../../../lib/supabase';
+import { useCreateTransfer } from '../../../hooks/mutations';
 
 export default function PermissionForm({ onDone, user }: any) {
   const [targetSchool, setTargetSchool] = useState('');
   const [reason, setReason] = useState('');
+  const createTransfer = useCreateTransfer();
 
   const submit = async (e: any) => {
     e.preventDefault();
-    const { error } = await supabase.from('school_transfers').insert({
+    createTransfer.mutate({
       studentid: user.id,
       target_school: targetSchool,
       reason_category: 'Other',
       detailed_reason: reason,
       status: 'pending'
+    }, {
+      onSuccess: () => {
+        onDone();
+      }
     });
-    
-    if (!error) {
-      onDone();
-    } else {
-      console.error("Error creating transfer request:", error);
-      toast.error("Failed to submit request.");
-    }
   };
 
   return (
@@ -96,8 +94,8 @@ export default function PermissionForm({ onDone, user }: any) {
               </div>
 
               <div className="pt-4 mt-8 flex justify-end">
-                <button type="submit" disabled={!targetSchool || !reason} className="bg-slate-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-slate-800 dark:hover:bg-zinc-100 disabled:opacity-50 font-semibold py-3 px-8 rounded-md transition-all shadow-sm focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 w-full sm:w-auto">
-                  Submit Transfer Request
+                <button type="submit" disabled={!targetSchool || !reason || createTransfer.isPending} className="bg-slate-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-slate-800 dark:hover:bg-zinc-100 disabled:opacity-50 font-semibold py-3 px-8 rounded-md transition-all shadow-sm focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 w-full sm:w-auto">
+                  {createTransfer.isPending ? 'Submitting...' : 'Submit Transfer Request'}
                 </button>
               </div>
             </form>

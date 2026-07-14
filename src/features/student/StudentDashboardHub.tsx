@@ -17,6 +17,7 @@ import FeedbackTab from '../shared/FeedbackTab';
 import AppointmentNotification from '../../components/ui/AppointmentNotification';
 import MyProfilesTab from '../shared/MyProfilesTab';
 import { useAppointments, useTransfers, useHasCheckedInToday, useSubmitWellnessCheckin } from '../../hooks/queries';
+import IntakeOnboardingModal from './components/IntakeOnboardingModal';
 
 // ─────────────────────────────────────────────
 // DAILY WELLNESS CHECK-IN MODAL
@@ -208,6 +209,7 @@ export default function StudentDashboardHub() {
       </div>
 
       <div className="relative z-10 flex flex-col h-full w-full">
+        <IntakeOnboardingModal userId={user.id} userName={user.name} />
         <AppointmentNotification />
         <Navbar title="Saina Care Portal">
           {unreadNotificationsCount > 0 && (

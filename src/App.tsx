@@ -3,7 +3,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import GlobalErrorBoundary from './components/layout/GlobalErrorBoundary';
 import { GlobalNotifications } from './components/GlobalNotifications';
 import AppLayoutWrapper from './components/layout/AppLayoutWrapper';
 import { Loader2 } from 'lucide-react';
@@ -148,12 +148,12 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <ErrorBoundary>
+          <GlobalErrorBoundary>
             <GlobalNotifications />
             <Router>
               <AppRoutes />
             </Router>
-          </ErrorBoundary>
+          </GlobalErrorBoundary>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

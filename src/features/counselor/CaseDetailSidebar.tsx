@@ -4,8 +4,9 @@ import toast from 'react-hot-toast';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckSquare, XSquare, FileText, Send, Hand, Save } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
+import { useUpdateCaseStatus } from '../../hooks/mutations';
+import { useSubmitCaseNote } from '../../hooks/queries';
 
 export default function CaseDetailSidebar({ request, onClose, user, onStartChat }) {
   const [activeTab, setActiveTab] = useState('documents');
@@ -19,6 +20,9 @@ export default function CaseDetailSidebar({ request, onClose, user, onStartChat 
 
   const queryClient = useQueryClient();
 
+  const updateStatus = useUpdateCaseStatus();
+  const submitNote = useSubmitCaseNote();
+
   const getTableName = () => request.type?.toLowerCase() === 'appointment' ? 'appointments' : 'school_transfers';
 
   const submitResolve = async (status) => {
@@ -28,54 +32,42 @@ export default function CaseDetailSidebar({ request, onClose, user, onStartChat 
       updateData.scheduled_date = new Date(scheduledAt).toISOString();
     }
     
-    await supabase.from(table).update(updateData).eq('id', request.id);
-    
-    if (notes || privateNotes) {
-       await supabase.from('case_notes').insert({
-         studentid: request.studentid,
-         counselorid: user.id,
-         title: `${status.toUpperCase()} - ${request.type}`,
-         content: `Visible Notes: ${notes}\nPrivate Notes: ${privateNotes}`,
-         note_type: 'resolution'
-       });
-    }
-
-    queryClient.invalidateQueries({ queryKey: ['appointments'] });
-    queryClient.invalidateQueries({ queryKey: ['school_transfers'] });
-    queryClient.invalidateQueries({ queryKey: ['case_notes'] });
-    onClose();
+    updateStatus.mutate({ table, id: request.id, data: updateData }, {
+      onSuccess: () => {
+        if (notes || privateNotes) {
+           submitNote.mutate({
+             studentId: request.studentId || request.studentid,
+             counselorId: user.id,
+             title: `${status.toUpperCase()} - ${request.type}`,
+             content: `Visible Notes: ${notes}\nPrivate Notes: ${privateNotes}`,
+             noteType: 'resolution'
+           });
+        }
+        onClose();
+      }
+    });
   };
 
   const submitSaveNotes = async () => {
     if (notes || privateNotes) {
-       // Log into historical case notes
-       await supabase.from('case_notes').insert({
-         studentid: request.studentid,
-         counselorid: user.id,
+       submitNote.mutate({
+         studentId: request.studentId || request.studentid,
+         counselorId: user.id,
          title: `Update on ${request.type}`,
          content: `Visible Notes: ${notes}\nPrivate Notes: ${privateNotes}`,
-         note_type: 'update'
+         noteType: 'update'
        });
        
-       // Also update the active request with the visible notes so the student can see it
        if (notes) {
-         const table = getTableName();
-         await supabase.from(table).update({ counselor_notes: notes }).eq('id', request.id);
-         queryClient.invalidateQueries({ queryKey: ['appointments'] });
-         queryClient.invalidateQueries({ queryKey: ['school_transfers'] });
+         updateStatus.mutate({ table: getTableName(), id: request.id, data: { counselor_notes: notes } });
        }
-       
-       queryClient.invalidateQueries({ queryKey: ['case_notes'] });
-       toast.success("Notes saved successfully");
     }
   };
 
   const submitClaim = async () => {
-    const table = getTableName();
-    await supabase.from(table).update({ counselorid: user.id, status: 'in-progress' }).eq('id', request.id);
-    queryClient.invalidateQueries({ queryKey: ['appointments'] });
-    queryClient.invalidateQueries({ queryKey: ['school_transfers'] });
-    onClose();
+    updateStatus.mutate({ table: getTableName(), id: request.id, data: { counselorid: user.id, status: 'in-progress' } }, {
+      onSuccess: () => onClose()
+    });
   };
 
   const isResolved = request.status === 'approved' || request.status === 'rejected';
