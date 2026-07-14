@@ -7,7 +7,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
   return {
-    base: '/SAINA-Care-Portal/',
+    base: process.env.VERCEL === '1' ? '/' : '/SAINA-Care-Portal/',
     test: {
       globals: true,
       environment: 'jsdom',
