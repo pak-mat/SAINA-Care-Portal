@@ -28,8 +28,8 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-zinc-950 p-4">
-          <div className="max-w-md w-full bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-8 border border-red-100 dark:border-red-900/30 text-center">
-            <div className="w-16 h-16 mx-auto bg-red-100 dark:bg-red-900/30 text-red-600 rounded-2xl flex items-center justify-center mb-6 shadow-inner">
+          <div className="max-w-md w-full bg-white dark:bg-zinc-900 rounded-xl shadow-2xl p-8 border border-red-100 dark:border-red-900/30 text-center">
+            <div className="w-16 h-16 mx-auto bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg flex items-center justify-center mb-6 shadow-inner">
               <AlertTriangle size={32} />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">Something went wrong</h1>

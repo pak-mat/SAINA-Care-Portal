@@ -30,7 +30,7 @@ export default function StudentTable({
   setCurrentPage
 }: StudentTableProps) {
   return (
-    <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden relative min-h-[400px]">
+    <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg shadow-sm overflow-hidden relative min-h-[400px]">
       {loading ? (
         <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm z-10">
           <RefreshCw className="animate-spin text-emerald-500" size={32} />

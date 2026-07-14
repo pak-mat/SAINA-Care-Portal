@@ -23,9 +23,9 @@ export const mapUserDTO = (dbUser: any): User => ({
   gender: dbUser.gender,
   age: dbUser.age,
   riskLevel: dbUser.risklevel,
-  accountStatus: dbUser.account_status || dbUser.status,
-  guardianName: dbUser.guardian_name,
-  emergencyContact: dbUser.emergency_contact,
+  accountStatus: dbUser.account_status || dbUser.preferences?.accountStatus || dbUser.status,
+  guardianName: dbUser.guardian_name || dbUser.preferences?.guardianName,
+  emergencyContact: dbUser.emergency_contact || dbUser.preferences?.emergencyContact,
   assignedCounselor: dbUser.assigned_counselor
 });
 

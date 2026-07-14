@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, X, Clock, ChevronRight, BookOpen } from 'lucide-react';
 import { MOCK_ARTICLES } from './resourceData';
@@ -61,21 +62,20 @@ export default function ResourceVault() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <AnimatePresence>
+        <>
           {filteredArticles.length === 0 ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="col-span-full py-16 text-center glass-panel shadow-sm transition-colors duration-300 flex flex-col items-center">
+            <div className="col-span-full py-16 text-center glass-panel shadow-sm transition-colors duration-300 flex flex-col items-center">
               <div className="w-20 h-20 mb-6 bg-slate-100 dark:bg-zinc-800 rounded-full flex items-center justify-center shadow-inner border border-slate-200 dark:border-zinc-700">
                 <Search size={32} className="text-slate-400 dark:text-zinc-500" />
               </div>
               <h3 className="text-xl font-bold text-slate-800 dark:text-zinc-200 mb-2">No matching resources</h3>
               <p className="text-slate-500 dark:text-zinc-400">Try adjusting your search terms or category filter.</p>
-            </motion.div>
+            </div>
           ) : (
             filteredArticles.map(article => (
-              <motion.div 
+              <div 
                 key={article.id}
-                layoutId={`card-container-${article.id}`}
-                className="glass-panel shadow-sm overflow-hidden flex flex-col cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+                className="glass-panel shadow-sm overflow-hidden flex flex-col cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-all duration-300 group"
                 onClick={() => setSelectedArticle(article)}
               >
                 <div className="p-8 flex-1 flex flex-col">
@@ -88,13 +88,14 @@ export default function ResourceVault() {
                     </span>
                   </div>
                   
-                  <motion.h3 layoutId={`title-${article.id}`} className="text-xl font-bold text-slate-900 dark:text-zinc-100 mb-3 leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
-                    {article.title}
-                  </motion.h3>
                   
-                  <motion.p layoutId={`summary-${article.id}`} className="text-sm font-medium text-slate-500 dark:text-zinc-400 mb-6 line-clamp-3 leading-relaxed">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-zinc-100 mb-3 leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+                    {article.title}
+                  </h3>
+                  
+                  <p className="text-sm font-medium text-slate-500 dark:text-zinc-400 mb-6 line-clamp-3 leading-relaxed">
                     {article.summary}
-                  </motion.p>
+                  </p>
                   
                   <div className="mt-auto flex items-center text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500 pt-5 border-t border-slate-100 dark:border-zinc-800/50">
                     <span className="flex-1">Read full guide</span>
@@ -103,25 +104,21 @@ export default function ResourceVault() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))
           )}
-        </AnimatePresence>
+        </>
       </div>
 
-      <AnimatePresence>
-        {selectedArticle && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }}
+      <>
+        {selectedArticle && createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            <div 
               onClick={() => setSelectedArticle(null)}
               className="absolute inset-0 bg-slate-900/60 dark:bg-black/60 backdrop-blur-sm cursor-pointer"
             />
             
-            <motion.div 
-              layoutId={`card-container-${selectedArticle.id}`}
+            <div 
               className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2rem] shadow-2xl relative z-10 flex flex-col transition-colors duration-300 border border-white/50 dark:border-zinc-800/50"
             >
               <button 
@@ -141,13 +138,13 @@ export default function ResourceVault() {
                    </span>
                 </div>
                 
-                <motion.h3 layoutId={`title-${selectedArticle.id}`} className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-zinc-100 mb-4 leading-tight tracking-tight">
+                <h3 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-zinc-100 mb-4 leading-tight tracking-tight">
                   {selectedArticle.title}
-                </motion.h3>
+                </h3>
                 
-                <motion.p layoutId={`summary-${selectedArticle.id}`} className="text-slate-600 dark:text-zinc-300 text-base font-medium leading-relaxed max-w-xl">
+                <p className="text-slate-600 dark:text-zinc-300 text-base font-medium leading-relaxed max-w-xl">
                   {selectedArticle.summary}
-                </motion.p>
+                </p>
               </div>
               
               <div className="p-8 sm:p-10">
@@ -184,10 +181,11 @@ export default function ResourceVault() {
                    Close Article
                  </button>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </div>,
+          document.body
         )}
-      </AnimatePresence>
+      </>
     </div>
   );
 }

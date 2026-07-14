@@ -13,6 +13,7 @@ export interface User {
   bio?: string;
   bannerStyle?: string;
   avatarColor?: string;
+  avatarUrl?: string;
   interests?: string[];
   socialHandles?: { linkedIn?: string; twitter?: string; instagram?: string; website?: string };
   preferences?: { uiSound?: boolean; notificationsEnabled?: boolean; availableDays?: number[]; availableSlots?: string[]; availabilitySchedule?: Record<number, string[]> };

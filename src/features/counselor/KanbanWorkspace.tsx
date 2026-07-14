@@ -112,7 +112,7 @@ export default function KanbanWorkspace({ requests, user, onSelectCase }: Kanban
                 <span className="bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">{col.count}</span>
               </div>
               
-              <div className="flex-1 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-md border border-white/60 dark:border-zinc-800/50 rounded-2xl p-3 overflow-y-auto shadow-[inset_0_2px_12px_rgba(0,0,0,0.02)]">
+              <div className="flex-1 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-md border border-white/60 dark:border-zinc-800/50 rounded-lg p-3 overflow-y-auto shadow-[inset_0_2px_12px_rgba(0,0,0,0.02)]">
                 {col.items.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center p-6 text-center border border-dashed border-slate-200 dark:border-zinc-700/60 rounded-xl bg-white/50 dark:bg-zinc-800/30">
                     <div className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-3">

@@ -42,7 +42,7 @@ function LoadingFallback() {
         {/* Main Content Skeleton */}
         <div className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto">
           {/* Hero Widget Skeleton */}
-          <div className="w-full h-48 sm:h-56 rounded-2xl bg-slate-200 dark:bg-zinc-800/80 animate-pulse"></div>
+          <div className="w-full h-48 sm:h-56 rounded-lg bg-slate-200 dark:bg-zinc-800/80 animate-pulse"></div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Area Skeleton */}

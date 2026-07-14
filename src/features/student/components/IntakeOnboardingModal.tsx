@@ -193,7 +193,7 @@ export default function IntakeOnboardingModal({ userId, userName }: { userId: st
       
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white dark:bg-zinc-950 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden relative z-10 border border-slate-100 dark:border-zinc-800 flex flex-col max-h-[90vh]"
+        className="bg-white dark:bg-zinc-950 w-full max-w-lg rounded-xl shadow-2xl overflow-hidden relative z-10 border border-slate-100 dark:border-zinc-800 flex flex-col max-h-[90vh]"
       >
         <div className="p-8 text-center space-y-6 flex-1 overflow-y-auto scrollbar-hide">
           {step < 4 ? (
@@ -206,7 +206,7 @@ export default function IntakeOnboardingModal({ userId, userName }: { userId: st
                 </div>
               </div>
 
-              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-2xl mx-auto flex items-center justify-center">
+              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-lg mx-auto flex items-center justify-center">
                 <CurrentIcon size={32} />
               </div>
               

@@ -26,7 +26,7 @@ export default function CounselorProfileModal({ profile, onClose }: CounselorPro
             initial={{ scale: 0.95, opacity: 0, y: 15 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 15 }}
-            className="relative w-full max-w-sm bg-white dark:bg-zinc-800 rounded-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-zinc-700 max-h-[90vh] overflow-y-auto"
+            className="relative w-full max-w-sm bg-white dark:bg-zinc-800 rounded-lg overflow-hidden shadow-2xl border border-slate-200 dark:border-zinc-700 max-h-[90vh] overflow-y-auto"
           >
             <div className={`h-28 w-full ${getBannerClass(profile.bannerStyle)}`}></div>
             

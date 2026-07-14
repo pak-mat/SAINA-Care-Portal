@@ -11,8 +11,6 @@ export default function CounselorLoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isFadingOut, setIsFadingOut] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
-  
   useEffect(() => {
     if (user && user.role === 'counselor') {
       navigate('/counselor/dashboard', { replace: true });
@@ -21,7 +19,6 @@ export default function CounselorLoginScreen() {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,34 +27,18 @@ export default function CounselorLoginScreen() {
     
     setTimeout(async () => {
       try {
-        if (isRegistering) {
-          if (!fullName || !email || !password) throw new Error('Please fill out all fields.');
-          
-          const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                name: fullName,
-                role: 'counselor'
-              }
-            }
-          });
-          if (error) throw error;
-          // Let the AuthContext useEffect handle the redirect
-        } else {
-          if (!email || !password) throw new Error('Please enter email and password.');
-          
-          const { error, data } = await supabase.auth.signInWithPassword({ email, password });
-          if (error) throw error;
-          
-          const userRole = data.user?.app_metadata?.role || data.user?.user_metadata?.role;
-          if (userRole !== 'counselor') {
-            await supabase.auth.signOut();
-            throw new Error('Access denied. This portal is for staff only.');
-          }
-          // Let the AuthContext useEffect handle the redirect
+        if (!email || !password) throw new Error('Please enter email and password.');
+        
+        const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        
+        const userRole = data.user?.app_metadata?.role || data.user?.user_metadata?.role;
+        if (userRole !== 'counselor') {
+          await supabase.auth.signOut();
+          throw new Error('Access denied. This portal is for staff only.');
         }
+        // Let the AuthContext useEffect handle the redirect
+
       } catch (err: any) {
         setError(err.message || 'An error occurred.');
         setLoading(false);
@@ -109,7 +90,7 @@ export default function CounselorLoginScreen() {
             className="w-full max-w-[420px] relative z-10"
           >
             <div className="flex flex-col items-center mx-auto mb-8 text-center">
-              <div className="w-12 h-12 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 rounded-2xl flex items-center justify-center shadow-inner mb-4">
+              <div className="w-12 h-12 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg flex items-center justify-center shadow-inner mb-4">
                 <Sparkles size={24} className="text-emerald-500 dark:text-emerald-400" />
               </div>
               <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-bold tracking-[0.25em] mb-2 uppercase">SAINA CARE STAFF</span>
@@ -120,17 +101,6 @@ export default function CounselorLoginScreen() {
                <form onSubmit={handleSubmit} className="relative z-10 space-y-4">
                  {/* Inputs */}
                  <div className="space-y-4">
-                   {isRegistering && (
-                     <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} className="space-y-4 overflow-hidden">
-                       <input 
-                         type="text" 
-                         value={fullName}
-                         onChange={(e) => setFullName(e.target.value)}
-                         className="w-full glass-input text-sm"
-                         placeholder="Full Name"
-                       />
-                     </motion.div>
-                   )}
                    <input 
                      type="email" 
                      value={email}
@@ -160,18 +130,11 @@ export default function CounselorLoginScreen() {
                  {/* Action Buttons */}
                  <div className="flex items-center gap-3 pt-3">
                    <button 
-                     type="button"
-                     onClick={() => setIsRegistering(!isRegistering)}
-                     className="flex-[1] glass-input py-3 text-sm font-bold text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center cursor-pointer"
-                   >
-                     {isRegistering ? 'Login Instead' : 'Sign Up'}
-                   </button>
-                   <button 
                      type="submit"
                      disabled={loading}
-                     className="flex-[1.2] glass-button py-3 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                     className="w-full glass-button py-3 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                    >
-                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isRegistering ? 'Register Staff' : 'Login Staff')}
+                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Login as Staff'}
                    </button>
                  </div>
                </form>

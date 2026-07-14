@@ -134,7 +134,7 @@ export default function LoginScreen() {
                     onClick={() => setActiveFeature(i)}
                     animate={{ opacity: isActive ? 1 : 0.6, x: isActive ? 0 : -4 }}
                     transition={{ duration: 0.3 }}
-                    className={`flex items-start gap-5 p-5 rounded-2xl cursor-pointer transition-all ${isActive ? 'glass-card' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+                    className={`flex items-start gap-5 p-5 rounded-lg cursor-pointer transition-all ${isActive ? 'glass-card' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
                   >
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${isActive ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30' : 'bg-black/5 dark:bg-white/5'}`}>
                       <Icon size={18} className={isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-white/40'} />
