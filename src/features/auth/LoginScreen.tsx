@@ -162,8 +162,6 @@ export default function LoginScreen() {
               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-white/40 font-bold uppercase tracking-wider">
                 <ShieldCheck size={14} className="text-emerald-600/70 dark:text-emerald-500/60" /> End-to-End Encrypted
               </div>
-              <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-white/10" />
-              <div className="text-xs text-slate-500 dark:text-white/40 font-bold uppercase tracking-wider">MOE Endorsed</div>
             </div>
           </div>
 
