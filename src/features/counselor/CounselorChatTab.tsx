@@ -71,7 +71,7 @@ export default function CounselorChatTab({ user, defaultStudentId, requests }: C
  
  return directoryData
  .filter(u => u.role === 'student' && allRelevantIds.has(u.id))
- .map(u => ({ id: u.id, name: u.name, studentid: u.studentid }));
+ .map(u => ({ id: u.id, name: u.name, studentid: u.studentId, avatarUrl: u.avatarUrl }));
  }, [directoryData, studentIdsFromRequests, conversationStudentIds]);
 
  useEffect(() => {
@@ -216,8 +216,14 @@ export default function CounselorChatTab({ user, defaultStudentId, requests }: C
  {!isMe && (
  <div className="w-8 shrink-0 flex flex-col justify-end">
  {showAvatar && (
- <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold shadow-sm mb-1">
- {sidebarStudents.find(s=>s.id===m.senderid)?.name.charAt(0) || 'S'}
+ <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold shadow-sm mb-1 overflow-hidden">
+ {(() => {
+   const sender = sidebarStudents.find(s=>s.id===m.senderid);
+   if (sender?.avatarUrl) {
+     return <img src={sender.avatarUrl} alt="Profile" className="w-full h-full object-cover" />;
+   }
+   return sender?.name?.charAt(0) || 'S';
+ })()}
  </div>
  )}
  </div>

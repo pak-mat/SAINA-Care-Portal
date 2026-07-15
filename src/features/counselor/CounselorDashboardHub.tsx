@@ -103,7 +103,7 @@ export default function CounselorDashboardHub() {
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const Icon = tab.icon;
-            const badgeCount = tab.id === 'workspace' ? requests.filter(r => (!r.counselorid && r.status === 'pending') || (r.counselorid === user.id && r.status === 'in-progress')).length : 0;
+            const badgeCount = tab.id === 'workspace' ? requests.filter(r => (!r.assignedTo && r.status === 'pending') || (r.assignedTo === user.id && r.status === 'in-progress')).length : 0;
             
             return (
               <button
@@ -149,7 +149,7 @@ export default function CounselorDashboardHub() {
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const Icon = tab.icon;
-            const badgeCount = tab.id === 'workspace' ? requests.filter(r => (!r.counselorid && r.status === 'pending') || (r.counselorid === user.id && r.status === 'in-progress')).length : 0;
+            const badgeCount = tab.id === 'workspace' ? requests.filter(r => (!r.assignedTo && r.status === 'pending') || (r.assignedTo === user.id && r.status === 'in-progress')).length : 0;
             
             return (
               <button
@@ -234,7 +234,7 @@ export default function CounselorDashboardHub() {
               onClose={() => setSelectedCase(null)} 
               user={user} 
               onStartChat={() => {
-                setChatStudentId(selectedCase.studentid);
+                setChatStudentId(selectedCase.studentId);
                 setActiveTab('chat');
                 setSelectedCase(null);
               }}

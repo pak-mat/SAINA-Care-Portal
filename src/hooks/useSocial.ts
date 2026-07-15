@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Database } from '../types/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useEffect, useState } from 'react';
+import { mapUserDTO } from './queries';
 
 type UserProfile = Database['public']['Tables']['users']['Row'];
 
@@ -51,7 +52,7 @@ export function useDirectory() {
     queryFn: async () => {
       const { data, error } = await supabase.from('users').select('*');
       if (error) throw error;
-      return data as UserProfile[];
+      return (data as any[]).map(mapUserDTO);
     }
   });
 }

@@ -90,7 +90,7 @@ export default function LoginScreen() {
   return (
     <AnimatePresence>
       <motion.div
-        className="min-h-screen flex font-sans relative overflow-hidden"
+        className="min-h-screen flex items-center justify-center font-sans relative overflow-hidden"
         exit={{ opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.35 }}
       >
@@ -104,8 +104,9 @@ export default function LoginScreen() {
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNCkiLz48L3N2Zz4=')] opacity-40 dark:opacity-20" />
           </div>
 
-          {/* ── LEFT CONTENT (Text/Features) ── */}
-          <div className="hidden lg:flex flex-col justify-center w-[50%] relative z-10 p-12 xl:p-20">
+          <div className="w-full max-w-6xl mx-auto flex flex-col lg:flex-row relative z-10 w-full">
+            {/* ── LEFT CONTENT (Text/Features) ── */}
+            <div className="hidden lg:flex flex-col justify-center w-full lg:w-1/2 p-8 lg:pr-12 xl:pr-20">
             {/* Logo + Brand */}
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -166,8 +167,8 @@ export default function LoginScreen() {
             </div>
           </div>
 
-          {/* ── RIGHT PANEL (Auth Form) ── */}
-          <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 relative z-10 w-full lg:w-[50%]">
+            {/* ── RIGHT PANEL (Auth Form) ── */}
+            <div className="flex-1 flex flex-col items-center lg:items-end justify-center p-6 sm:p-10 w-full lg:w-1/2">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
@@ -245,7 +246,7 @@ export default function LoginScreen() {
                   <button
                     type="button"
                     onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
-                    className="flex-[1] glass-input py-3 text-sm font-bold text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center cursor-pointer"
+                    className="flex-[1] glass-input py-3 text-sm font-bold text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center cursor-pointer border hover:border-slate-300 dark:hover:border-zinc-600 shadow-sm"
                   >
                     {isRegistering ? 'Login Instead' : 'Sign Up'}
                   </button>
@@ -287,6 +288,7 @@ export default function LoginScreen() {
                 </a>
               </div>
             </motion.div>
+            </div>
           </div>
         </motion.div>
     </AnimatePresence>

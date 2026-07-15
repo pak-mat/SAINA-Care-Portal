@@ -44,6 +44,7 @@ export interface BaseRequest {
 
 export interface AppointmentRequest extends BaseRequest {
   type: 'appointment';
+  counselorName?: string;
   choice1: string;
   choice2?: string;
   choice3?: string;

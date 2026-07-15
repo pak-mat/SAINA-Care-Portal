@@ -227,10 +227,10 @@ export interface ReportRequest {
   type: string;
   studentName?: string;
   status: string;
-  topic_category?: string;
-  target_school?: string;
-  scheduled_date?: string;
-  created_at: string;
+  reasonCategory?: string;
+  targetSchool?: string;
+  scheduledAt?: string;
+  submissionDate: string;
 }
 
 interface AppointmentReportProps {
@@ -316,11 +316,11 @@ function AppointmentReportDocument({ requests, counselorName }: AppointmentRepor
               <Text style={[styles.tableCell, styles.colStudent]}>{req.studentName || 'Unknown'}</Text>
               <Text style={[styles.tableCell, styles.colType]}>{req.type}</Text>
               <Text style={[styles.tableCell, styles.colTopic]}>
-                {req.type === 'Appointment' ? (req.topic_category || '—') : (req.target_school || '—')}
+                {req.type?.toLowerCase() === 'appointment' ? (req.reasonCategory || '—') : (req.targetSchool || '—')}
               </Text>
-              <Text style={[styles.tableCell, styles.colDate]}>{formatDate(req.created_at)}</Text>
+              <Text style={[styles.tableCell, styles.colDate]}>{formatDate(req.submissionDate)}</Text>
               <Text style={[styles.tableCell, styles.colScheduled]}>
-                {req.type === 'Appointment' ? formatDateTime(req.scheduled_date) : '—'}
+                {req.type?.toLowerCase() === 'appointment' ? formatDateTime(req.scheduledAt) : '—'}
               </Text>
               <View style={[styles.tableCell, styles.colStatus]}>
                 <Text style={getStatusStyle(req.status)}>{req.status}</Text>

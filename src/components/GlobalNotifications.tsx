@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { MessageSquare, UserPlus } from 'lucide-react';
 
 export function GlobalNotifications() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!user?.id) return;
@@ -60,11 +62,23 @@ export function GlobalNotifications() {
       })
       .subscribe();
 
+    // Listen for global data changes (real-time sync)
+    const globalDataChannel = supabase.channel('global_data_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['appointments'] });
+        queryClient.invalidateQueries({ queryKey: ['student_timeline'] }); // If applicable
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'school_transfers' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['school_transfers'] });
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(messageChannel);
       supabase.removeChannel(friendChannel);
+      supabase.removeChannel(globalDataChannel);
     };
-  }, [user?.id]);
+  }, [user?.id, queryClient]);
 
   return (
     <Toaster 

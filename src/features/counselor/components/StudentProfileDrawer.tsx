@@ -7,6 +7,7 @@ import {
  Edit3, Mail, Archive, FileKey, Activity, Clock, Check
 } from 'lucide-react';
 import { useCaseNotes, useSubmitCaseNote, useStudentTimeline, useStudentIntake } from '../../../hooks/queries';
+import { useDirectory } from '../../../hooks/useSocial';
 import { useAuth } from '../../../context/AuthContext';
 import { getRelativeTime } from '../../../utils/time';
 import { motion, AnimatePresence } from 'motion/react';
@@ -37,6 +38,7 @@ export default function StudentProfileDrawer({ isOpen, onClose, student, onSave 
  const { data: caseNotes } = useCaseNotes(student?.id);
  const { data: timeline } = useStudentTimeline(student?.id);
  const { data: intakeData } = useStudentIntake(student?.id || '');
+ const { data: directoryUsers } = useDirectory();
  const submitNote = useSubmitCaseNote();
 
  useEffect(() => {
@@ -296,7 +298,7 @@ export default function StudentProfileDrawer({ isOpen, onClose, student, onSave 
  </div>
  </div>
  <p className="text-sm text-slate-600 dark:text-zinc-400 whitespace-pre-wrap leading-relaxed">{note.content}</p>
- <p className="text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100 dark:border-zinc-800 font-medium">Logged by {note.users?.name || 'Counselor'}</p>
+ <p className="text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100 dark:border-zinc-800 font-medium">Logged by {directoryUsers?.find((u: any) => u.id === note.counselorid)?.name || note.users?.name || 'Counselor'}</p>
  </div>
  ))
  )}
@@ -353,7 +355,7 @@ export default function StudentProfileDrawer({ isOpen, onClose, student, onSave 
  {event.type === 'case_note' && (
  <div>
  <p className="text-sm font-bold text-slate-800 dark:text-zinc-200">Case Note Added</p>
- <p className="text-xs text-slate-500 mt-1">By: {event.data.users?.name}</p>
+ <p className="text-xs text-slate-500 mt-1">By: {directoryUsers?.find((u: any) => u.id === event.data.counselorid)?.name || event.data.users?.name || 'Counselor'}</p>
  </div>
  )}
  </div>

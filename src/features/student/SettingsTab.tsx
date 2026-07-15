@@ -38,7 +38,7 @@ export default function SettingsTab() {
  }
  });
 
- const { watch, handleSubmit, setValue } = methods;
+ const { watch, handleSubmit, setValue, formState: { isDirty }, reset } = methods;
  
  const [saved, setSaved] = useState(false);
  
@@ -78,44 +78,58 @@ export default function SettingsTab() {
  const activeBanner = bannerPresets.find(p => p.id === bannerStyle) || bannerPresets[0];
  const activeAvatar = avatarPresets.find(p => p.id === avatarColor) || avatarPresets[0];
 
- const handleSave = async (formData: any) => {
- const dataToUpdate = {
- name: formData.name,
- studentid: formData.studentId, // Map studentId to studentid database column
- preferences: { 
- ...user.preferences, 
- uiSound: formData.uiSound, 
- notificationsEnabled: formData.notificationsEnabled,
- bio: formData.bio,
- bannerStyle: formData.bannerStyle,
- avatarColor: formData.avatarColor,
- avatarUrl: formData.avatarUrl,
- interests: formData.interests,
- socialHandles: { 
- linkedIn: formData.linkedIn, 
- twitter: formData.twitter, 
- instagram: formData.instagram, 
- website: formData.website 
- }
- }
- };
+  const handleSave = async (formData: any) => {
+  const socialHandles = { 
+  linkedIn: formData.linkedIn, 
+  twitter: formData.twitter, 
+  instagram: formData.instagram, 
+  website: formData.website 
+  };
+  
+  const dataToUpdate = {
+  name: formData.name,
+  studentid: formData.studentId, // Map studentId to studentid database column
+  bio: formData.bio,
+  banner_style: formData.bannerStyle,
+  avatar_color: formData.avatarColor,
+  interests: formData.interests,
+  social_handles: socialHandles,
+  preferences: { 
+  ...user.preferences, 
+  uiSound: formData.uiSound, 
+  notificationsEnabled: formData.notificationsEnabled,
+  avatarUrl: formData.avatarUrl,
+  }
+  };
 
- // Save to Supabase
- const { error } = await supabase
- .from('users')
- .update(dataToUpdate)
- .eq('id', user.id);
+  // Save to Supabase
+  const { error } = await supabase
+  .from('users')
+  .update(dataToUpdate)
+  .eq('id', user.id);
 
- if (error) {
- console.error("Error saving profile:", error);
- return;
- }
+  if (error) {
+  console.error("Error saving profile:", error);
+  return;
+  }
 
- // Update local context
- updateUser({ ...user, ...dataToUpdate, studentId });
- setSaved(true);
- setTimeout(() => setSaved(false), 2000);
- };
+  // Update local context
+  updateUser({ 
+  ...user, 
+  name: formData.name,
+  studentId: formData.studentId,
+  bio: formData.bio,
+  bannerStyle: formData.bannerStyle,
+  avatarColor: formData.avatarColor,
+  interests: formData.interests,
+  socialHandles: socialHandles,
+  avatarUrl: formData.avatarUrl,
+  preferences: dataToUpdate.preferences
+  });
+  reset(formData);
+  setSaved(true);
+  setTimeout(() => setSaved(false), 2000);
+  };
 
 
 
@@ -359,21 +373,6 @@ export default function SettingsTab() {
  uiSound={uiSound} setUiSound={(v: boolean) => setValue('uiSound', v)}
  notificationsEnabled={notificationsEnabled} setNotificationsEnabled={(v: boolean) => setValue('notificationsEnabled', v)}
  />
-
- {/* Bottom Form Actions bar */}
- <div className="p-5 border-t border-slate-150 dark:border-zinc-700/60 bg-slate-50 dark:bg-zinc-900/40 flex items-center justify-between">
- <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-zinc-500 max-w-xs sm:max-w-md">
- <Info size={13} className="shrink-0 text-emerald-600" />
- <span>Saved properties are automatically mirrored onto server.</span>
- </div>
- <button 
- type="button"
- onClick={handleSubmit(handleSave)}
- className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow"
- >
- {saved ? <><CheckCircle size={16} /> Saved Successfully</> : <><Save size={16} /> Update Profile</>}
- </button>
- </div>
  </div>
  </div>
  )}
@@ -447,6 +446,40 @@ export default function SettingsTab() {
 
  </div>
  </motion.div>
+
+ {/* Floating Action Bar for Unsaved Changes */}
+ <AnimatePresence>
+ {isDirty && (
+ <motion.div 
+ initial={{ y: 100, opacity: 0 }} 
+ animate={{ y: 0, opacity: 1 }} 
+ exit={{ y: 100, opacity: 0 }}
+ className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-slate-900 dark:bg-zinc-900 border border-slate-700 dark:border-zinc-700/50 rounded-full px-4 py-3 shadow-2xl flex items-center gap-6"
+ >
+ <div className="flex items-center gap-2 px-2 text-white">
+ <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></div>
+ <span className="text-sm font-medium tracking-wide">Unsaved changes</span>
+ </div>
+ <div className="flex items-center gap-2">
+ <button 
+ type="button"
+ onClick={() => reset()}
+ className="text-slate-300 hover:text-white px-4 py-2 text-sm font-medium transition-colors"
+ >
+ Discard
+ </button>
+ <button 
+ type="button"
+ onClick={handleSubmit(handleSave)}
+ className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm px-6 py-2 rounded-full flex items-center gap-2 transition-all shadow-lg active:scale-95"
+ >
+ {saved ? <><CheckCircle size={16} /> Saved</> : <><Save size={16} /> Save changes</>}
+ </button>
+ </div>
+ </motion.div>
+ )}
+ </AnimatePresence>
+
  </FormProvider>
  );
 }

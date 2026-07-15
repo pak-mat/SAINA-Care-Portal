@@ -33,43 +33,44 @@ export const mapUserDTO = (dbUser: any): User => ({
 export const mapAppointmentDTO = (dbAppt: any): AppointmentRequest => ({
   id: dbAppt.id,
   studentId: dbAppt.studentid,
-  studentName: dbAppt.studentname || dbAppt.users?.name || 'Unknown',
+  studentName: dbAppt.studentname || '',
+  counselorName: dbAppt.counselor_profile?.name || '',
   status: dbAppt.status,
   submissionDate: dbAppt.created_at,
-  assignedTo: dbAppt.assignedto,
-  claimedAt: dbAppt.claimedat,
-  resolvedBy: dbAppt.resolvedby,
-  resolvedAt: dbAppt.resolvedat,
-  counselorNotes: dbAppt.counselornotes,
-  privateCounselorNotes: dbAppt.privatecounselornotes,
+  assignedTo: dbAppt.counselorid,
+  claimedAt: dbAppt.claimedat || null,
+  resolvedBy: dbAppt.resolvedby || null,
+  resolvedAt: dbAppt.resolvedat || null,
+  counselorNotes: dbAppt.counselor_notes,
+  privateCounselorNotes: dbAppt.private_notes,
   type: 'appointment',
-  choice1: dbAppt.choice1,
-  choice2: dbAppt.choice2,
-  choice3: dbAppt.choice3,
-  reasonCategory: dbAppt.reasoncategory,
-  details: dbAppt.details,
-  scheduledAt: dbAppt.scheduledat,
-  notified: dbAppt.notified,
+  choice1: null,
+  choice2: null,
+  choice3: null,
+  reasonCategory: dbAppt.topic_category,
+  details: dbAppt.private_notes,
+  scheduledAt: dbAppt.scheduled_date,
+  notified: dbAppt.notified || false,
 });
 
 export const mapTransferDTO = (dbTrans: any): PermissionRequest => ({
   id: dbTrans.id,
   studentId: dbTrans.studentid,
-  studentName: dbTrans.studentname || dbTrans.users?.name || 'Unknown',
+  studentName: dbTrans.studentname || '',
   status: dbTrans.status,
   submissionDate: dbTrans.created_at,
-  assignedTo: dbTrans.assignedto,
-  claimedAt: dbTrans.claimedat,
-  resolvedBy: dbTrans.resolvedby,
-  resolvedAt: dbTrans.resolvedat,
-  counselorNotes: dbTrans.counselornotes,
-  privateCounselorNotes: dbTrans.privatecounselornotes,
+  assignedTo: dbTrans.counselorid,
+  claimedAt: dbTrans.claimedat || null,
+  resolvedBy: dbTrans.resolvedby || null,
+  resolvedAt: dbTrans.resolvedat || null,
+  counselorNotes: dbTrans.counselor_notes,
+  privateCounselorNotes: null,
   type: 'permission',
-  targetSchool: dbTrans.targetschool,
-  reason: dbTrans.reason,
-  transferFormsFile: dbTrans.transferformsfile,
-  academicRecordsFile: dbTrans.academicrecordsfile,
-  idDocumentsFile: dbTrans.iddocumentsfile,
+  targetSchool: dbTrans.target_school,
+  reason: dbTrans.detailed_reason,
+  transferFormsFile: dbTrans.transfer_forms_url,
+  academicRecordsFile: dbTrans.academic_records_url,
+  idDocumentsFile: dbTrans.id_documents_url,
 });
 
 
@@ -122,7 +123,7 @@ export function useAppointments(page = PAGINATION.DEFAULT_PAGE, limit = PAGINATI
   return useQuery({
     queryKey: ['appointments', page, limit, status, studentId],
     queryFn: async () => {
-      let query = supabase.from('appointments').select('*, users:counselorid (name)', { count: 'exact' });
+      let query = supabase.from('appointments').select('*', { count: 'exact' });
 
       if (status) query = query.eq('status', status);
       if (studentId) query = query.eq('studentid', studentId);
@@ -134,6 +135,7 @@ export function useAppointments(page = PAGINATION.DEFAULT_PAGE, limit = PAGINATI
       return { data: (data || []).map(mapAppointmentDTO), total: count || 0, page, limit };
     },
     staleTime: CACHE_TIMES.APPOINTMENTS_STALE_TIME,
+    refetchInterval: 5000, // Poll every 5 seconds for real-time sync
   });
 }
 
@@ -153,6 +155,7 @@ export function useTransfers(page = PAGINATION.DEFAULT_PAGE, limit = PAGINATION.
       return { data: (data || []).map(mapTransferDTO), total: count || 0, page, limit };
     },
     staleTime: CACHE_TIMES.TRANSFERS_STALE_TIME,
+    refetchInterval: 5000, // Poll every 5 seconds for real-time sync
   });
 }
 
@@ -324,7 +327,7 @@ export function useStudentTimeline(studentId: string) {
         supabase.from('appointments').select('*').eq('studentid', studentId).limit(50),
         supabase.from('school_transfers').select('*').eq('studentid', studentId).limit(50),
         supabase.from('wellness_checkins').select('*').eq('studentid', studentId).limit(50),
-        supabase.from('case_notes').select('id, created_at, title, note_type, users:counselorid(name)').eq('studentid', studentId).limit(50)
+        supabase.from('case_notes').select('id, created_at, title, note_type, counselorid').eq('studentid', studentId).limit(50)
       ]);
       
       const timeline: Array<{ type: string; date: Date; data: any }> = [];

@@ -38,6 +38,39 @@ export default function CounselorSettingsTab() {
  const [avatarUrl, setAvatarUrl] = useState(user?.preferences?.avatarUrl || '');
  const [uploading, setUploading] = useState(false);
 
+  const isDirty = 
+    name !== (user?.name || '') ||
+    status !== (user?.status || 'Available') ||
+    signature !== (user?.signature || '') ||
+    bio !== (user?.bio || 'Professional Saina Care Counselor specializing in student educational guidance, anxiety, and private therapeutic wellness.') ||
+    bannerStyle !== (user?.bannerStyle || 'blue_calm') ||
+    avatarColor !== (user?.avatarColor || 'blue') ||
+    JSON.stringify(interests) !== JSON.stringify(user?.interests || ['Anxiety & Stress', 'Educational Guideline', 'Career Pathway', 'Conflict Resolve']) ||
+    linkedIn !== (user?.socialHandles?.linkedIn || '') ||
+    twitter !== (user?.socialHandles?.twitter || '') ||
+    instagram !== (user?.socialHandles?.instagram || '') ||
+    website !== (user?.socialHandles?.website || '') ||
+    uiSound !== (user?.preferences?.uiSound ?? true) ||
+    notificationsEnabled !== (user?.preferences?.notificationsEnabled ?? true) ||
+    avatarUrl !== (user?.preferences?.avatarUrl || '');
+
+  const handleDiscard = () => {
+    setName(user?.name || '');
+    setStatus(user?.status || 'Available');
+    setSignature(user?.signature || '');
+    setBio(user?.bio || 'Professional Saina Care Counselor specializing in student educational guidance, anxiety, and private therapeutic wellness.');
+    setBannerStyle(user?.bannerStyle || 'blue_calm');
+    setAvatarColor(user?.avatarColor || 'blue');
+    setInterests(user?.interests || ['Anxiety & Stress', 'Educational Guideline', 'Career Pathway', 'Conflict Resolve']);
+    setLinkedIn(user?.socialHandles?.linkedIn || '');
+    setTwitter(user?.socialHandles?.twitter || '');
+    setInstagram(user?.socialHandles?.instagram || '');
+    setWebsite(user?.socialHandles?.website || '');
+    setUiSound(user?.preferences?.uiSound ?? true);
+    setNotificationsEnabled(user?.preferences?.notificationsEnabled ?? true);
+    setAvatarUrl(user?.preferences?.avatarUrl || '');
+  };
+
  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
    try {
      setUploading(true);
@@ -143,6 +176,7 @@ export default function CounselorSettingsTab() {
  const statuses = ['Available', 'Busy', 'Away'];
 
  return (
+ <>
  <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}} className="max-w-6xl mx-auto pb-12 px-4 sm:px-6">
  <div className="mb-8 overflow-hidden bg-gradient-to-r from-emerald-900 to-slate-900 dark:from-emerald-950 dark:to-black rounded-[1.75rem] p-8 sm:p-10 relative shadow-lg">
  <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 opacity-20 rounded-full blur-3xl translate-x-1/2 -translate-y-1/4 pointer-events-none"></div>
@@ -638,20 +672,6 @@ export default function CounselorSettingsTab() {
  </div>
  </div>
 
- {/* Bottom Form Actions bar */}
- <div className="p-5 border-t border-slate-150 dark:border-zinc-700/60 bg-slate-50 dark:bg-zinc-900/40 flex items-center justify-between">
- <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-zinc-500 max-w-xs sm:max-w-md">
- <Info size={13} className="shrink-0 text-blue-600" />
- <span>Saved properties are automatically mirrored onto server.</span>
- </div>
- <button 
- type="button"
- onClick={handleSave}
- className="bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow"
- >
- {saved ? <><CheckCircle size={16} /> Saved Successfully</> : <><Save size={16} /> Update Profile</>}
- </button>
- </div>
  </div>
  </div>
  )}
@@ -725,5 +745,39 @@ export default function CounselorSettingsTab() {
 
  </div>
  </motion.div>
+
+  {/* Floating Action Bar for Unsaved Changes */}
+  <AnimatePresence>
+  {isDirty && (
+  <motion.div 
+  initial={{ y: 100, opacity: 0 }} 
+  animate={{ y: 0, opacity: 1 }} 
+  exit={{ y: 100, opacity: 0 }}
+  className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-slate-900 dark:bg-zinc-900 border border-slate-700 dark:border-zinc-700/50 rounded-full px-4 py-3 shadow-2xl flex items-center gap-6"
+  >
+  <div className="flex items-center gap-2 px-2 text-white">
+  <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></div>
+  <span className="text-sm font-medium tracking-wide">Unsaved changes</span>
+  </div>
+  <div className="flex items-center gap-2">
+  <button 
+  type="button"
+  onClick={handleDiscard}
+  className="text-slate-300 hover:text-white px-4 py-2 text-sm font-medium transition-colors"
+  >
+  Discard
+  </button>
+  <button 
+  type="button"
+  onClick={handleSave}
+  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-6 py-2 rounded-full flex items-center gap-2 transition-all shadow-lg active:scale-95"
+  >
+  {saved ? <><CheckCircle size={16} /> Saved</> : <><Save size={16} /> Save changes</>}
+  </button>
+  </div>
+  </motion.div>
+  )}
+  </AnimatePresence>
+  </>
  );
 }

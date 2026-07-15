@@ -281,8 +281,14 @@ export default function StudentChatTab({ user, requests }) {
  {!isMe && (
  <div className="w-8 shrink-0 flex flex-col justify-end">
  {showAvatar && (
- <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white text-xs font-bold shadow-sm mb-1" title={msgSenderName}>
- {msgSenderName?.charAt(0) || 'U'}
+ <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white text-xs font-bold shadow-sm mb-1 overflow-hidden" title={msgSenderName}>
+ {(() => {
+   const sender = directoryData?.find(c => c.id === msgSenderId);
+   if (sender?.avatarUrl) {
+     return <img src={sender.avatarUrl} alt="Profile" className="w-full h-full object-cover" />;
+   }
+   return msgSenderName?.charAt(0) || 'U';
+ })()}
  </div>
  )}
  </div>

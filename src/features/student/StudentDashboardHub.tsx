@@ -17,6 +17,7 @@ import FeedbackTab from '../shared/FeedbackTab';
 import AppointmentNotification from '../../components/ui/AppointmentNotification';
 import MyProfilesTab from '../shared/MyProfilesTab';
 import { useAppointments, useTransfers, useHasCheckedInToday, useSubmitWellnessCheckin } from '../../hooks/queries';
+import { useDirectory } from '../../hooks/useSocial';
 import IntakeOnboardingModal from './components/IntakeOnboardingModal';
 
 // ─────────────────────────────────────────────
@@ -121,8 +122,15 @@ export default function StudentDashboardHub() {
  const { user, logout } = useAuth();
  const { data: appointmentsData } = useAppointments(1, 100, '', user?.id || '');
  const { data: transfersData } = useTransfers(1, 100, '', user?.id || '');
+ const { data: directoryUsers } = useDirectory();
  const appointments = appointmentsData?.data || [];
  const transfers = transfersData?.data || [];
+
+ const userNameMap = useMemo(() => {
+   const map = new Map<string, string>();
+   (directoryUsers || []).forEach(u => map.set(u.id, u.name));
+   return map;
+ }, [directoryUsers]);
 
  const [activeTab, setActiveTab] = useState('home');
  const [notifications, setNotifications] = useState([]);
@@ -141,31 +149,31 @@ export default function StudentDashboardHub() {
  const studentRequests = useMemo(() => {
  const apps = appointments.map(a => ({
  id: a.id,
- type: 'appointment',
+ type: 'appointment' as const,
  status: a.status,
- submissionDate: a.created_at,
- reasonCategory: a.topic_category,
- details: a.notes,
- choice1: a.scheduled_date ? new Date(a.scheduled_date).toLocaleString() : 'N/A',
- scheduledAt: a.scheduled_date,
- counselorNotes: a.counselor_notes || null,
- resolvedByName: a.users?.name || 'N/A',
- assignedTo: a.counselorid || null
+ submissionDate: a.submissionDate,
+ reasonCategory: a.reasonCategory,
+ details: a.details,
+ choice1: a.scheduledAt ? new Date(a.scheduledAt).toLocaleString() : 'N/A',
+ scheduledAt: a.scheduledAt,
+ counselorNotes: a.counselorNotes || null,
+ resolvedByName: (a.assignedTo ? userNameMap.get(a.assignedTo) : null) || 'N/A',
+ assignedTo: a.assignedTo || null
  }));
  
  const trans = transfers.map(t => ({
  id: t.id,
- type: 'permission',
+ type: 'permission' as const,
  status: t.status,
- submissionDate: t.created_at,
- targetSchool: t.target_school,
- reason: t.detailed_reason,
- counselorNotes: t.counselor_notes || null,
- assignedTo: t.counselorid || null
+ submissionDate: t.submissionDate,
+ targetSchool: t.targetSchool,
+ reason: t.reason,
+ counselorNotes: t.counselorNotes || null,
+ assignedTo: t.assignedTo || null
  }));
  
  return [...apps, ...trans].sort((a,b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime());
- }, [appointments, transfers]);
+ }, [appointments, transfers, userNameMap]);
 
  const handleTabChange = (tab) => {
  setActiveTab(tab);

@@ -647,6 +647,19 @@ EXCEPTION WHEN duplicate_object THEN
   NULL;
 END $$;
 
+-- Enable realtime for appointments (live Kanban board sync)
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE "appointments";
+EXCEPTION WHEN duplicate_object THEN
+  NULL;
+END $$;
+
+-- Enable realtime for school transfers (live transfer request sync)
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE "school_transfers";
+EXCEPTION WHEN duplicate_object THEN
+  NULL;
+END $$;
 
 -- ╔═══════════════════════════════════════════════════════════════╗
 -- ║  SECTION 7: BACKFILL app_metadata FOR EXISTING USERS          ║
@@ -661,6 +674,25 @@ SET raw_app_meta_data = COALESCE(au.raw_app_meta_data, '{}'::jsonb)
 FROM public.users pu
 WHERE au.id = pu.id
   AND (au.raw_app_meta_data ->> 'role') IS NULL;
+
+
+-- ╔═══════════════════════════════════════════════════════════════╗
+-- ║  SECTION 8: EXPLICIT CONSTRAINT ENFORCEMENT                   ║
+-- ╚═══════════════════════════════════════════════════════════════╝
+-- Ensures that relationships exist, even if tables were already 
+-- created manually without them previously.
+
+DO $$ BEGIN
+  ALTER TABLE "appointments" ADD CONSTRAINT appointments_counselorid_fkey FOREIGN KEY ("counselorid") REFERENCES "users"("id") ON DELETE SET NULL;
+EXCEPTION WHEN duplicate_object THEN
+  NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE "case_notes" ADD CONSTRAINT case_notes_counselorid_fkey FOREIGN KEY ("counselorid") REFERENCES "users"("id") ON DELETE SET NULL;
+EXCEPTION WHEN duplicate_object THEN
+  NULL;
+END $$;
 
 
 -- ╔═══════════════════════════════════════════════════════════════╗

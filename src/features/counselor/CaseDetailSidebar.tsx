@@ -71,7 +71,7 @@ export default function CaseDetailSidebar({ request, onClose, user, onStartChat 
  };
 
  const isResolved = request.status === 'approved' || request.status === 'rejected';
- const isUnassigned = !request.counselorid;
+ const isUnassigned = !request.assignedTo && !request.counselorid;
  
  const sidebarContent = (
  <>
@@ -124,15 +124,19 @@ export default function CaseDetailSidebar({ request, onClose, user, onStartChat 
  <div className="glass-panel p-6 shadow-sm">
  <h4 className="text-[10px] font-black text-slate-500 dark:text-zinc-400 uppercase tracking-widest mb-5 border-b border-slate-100 dark:border-zinc-800 pb-3">Submission Details</h4>
  {request.type?.toLowerCase() === 'appointment' && (
- <div className="space-y-5">
- <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-1">Scheduled Date:</span> <span className="text-sm font-bold text-slate-900 dark:text-zinc-100">{new Date(request.scheduled_date).toLocaleString()}</span></div>
+ <div className="space-y-4">
+ {request.scheduledAt && (
+ <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-1">Scheduled Date:</span> <span className="text-sm font-bold text-slate-900 dark:text-zinc-100">{new Date(request.scheduledAt).toLocaleString()}</span></div>
+ )}
  <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-1">Topic Category:</span> <span className="text-sm font-bold text-slate-900 dark:text-zinc-100 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/50 inline-block mt-1">{request.topic_category || request.reasonCategory}</span></div>
- <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-2">Private Notes:</span> <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm p-4 border border-slate-200/60 dark:border-zinc-700/60 rounded-xl text-sm font-medium text-slate-700 dark:text-zinc-300 mt-1 whitespace-pre-wrap">{request.private_notes || request.details || 'No notes provided.'}</div></div>
+ <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-2">Private Notes:</span> <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm p-4 border border-slate-200/60 dark:border-zinc-700/60 rounded-xl text-sm font-medium text-slate-700 dark:text-zinc-300 mt-1 whitespace-pre-wrap">{request.private_notes || request.details || request.reason || 'No notes provided.'}</div></div>
  </div>
  )}
  {request.type?.toLowerCase() === 'transfer' && (
  <div className="space-y-5">
- <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-1">Target School:</span> <span className="text-sm font-bold text-slate-900 dark:text-zinc-100 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/50 inline-block mt-1">{request.target_school}</span></div>
+ {request.targetSchool && (
+ <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-1">Target School:</span> <span className="text-sm font-bold text-slate-900 dark:text-zinc-100 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/50 inline-block mt-1">{request.targetSchool}</span></div>
+ )}
  <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-1">Reason Category:</span> <span className="text-sm font-bold text-slate-900 dark:text-zinc-100 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/50 inline-block mt-1">{request.reason_category}</span></div>
  <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-2">Detailed Reason:</span> <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm p-4 border border-slate-200/60 dark:border-zinc-700/60 rounded-xl text-sm font-medium text-slate-700 dark:text-zinc-300 mt-1 whitespace-pre-wrap">{request.detailed_reason}</div></div>
  <div>
