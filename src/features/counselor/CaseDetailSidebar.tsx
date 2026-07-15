@@ -132,19 +132,19 @@ export default function CaseDetailSidebar({ request, onClose, user, onStartChat 
  <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-2">Private Notes:</span> <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm p-4 border border-slate-200/60 dark:border-zinc-700/60 rounded-xl text-sm font-medium text-slate-700 dark:text-zinc-300 mt-1 whitespace-pre-wrap">{request.private_notes || request.details || request.reason || 'No notes provided.'}</div></div>
  </div>
  )}
- {request.type?.toLowerCase() === 'transfer' && (
+ {(request.type?.toLowerCase() === 'transfer' || request.type?.toLowerCase() === 'permission') && (
  <div className="space-y-5">
- {request.targetSchool && (
- <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-1">Target School:</span> <span className="text-sm font-bold text-slate-900 dark:text-zinc-100 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/50 inline-block mt-1">{request.targetSchool}</span></div>
+ {(request.targetSchool || request.target_school) && (
+ <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-1">Target School:</span> <span className="text-sm font-bold text-slate-900 dark:text-zinc-100 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/50 inline-block mt-1">{request.targetSchool || request.target_school}</span></div>
  )}
- <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-1">Reason Category:</span> <span className="text-sm font-bold text-slate-900 dark:text-zinc-100 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/50 inline-block mt-1">{request.reason_category}</span></div>
- <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-2">Detailed Reason:</span> <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm p-4 border border-slate-200/60 dark:border-zinc-700/60 rounded-xl text-sm font-medium text-slate-700 dark:text-zinc-300 mt-1 whitespace-pre-wrap">{request.detailed_reason}</div></div>
+ <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-1">Reason Category:</span> <span className="text-sm font-bold text-slate-900 dark:text-zinc-100 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/50 inline-block mt-1">{request.reason_category || request.reasonCategory || 'N/A'}</span></div>
+ <div><span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-2">Detailed Reason:</span> <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm p-4 border border-slate-200/60 dark:border-zinc-700/60 rounded-xl text-sm font-medium text-slate-700 dark:text-zinc-300 mt-1 whitespace-pre-wrap">{request.detailed_reason || request.reason || 'No reason provided.'}</div></div>
  <div>
  <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 block mb-3">Attached Documents:</span>
  <div className="flex flex-wrap gap-2.5">
- {request.transfer_forms_url && <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm border border-slate-200 dark:border-zinc-700 rounded-lg px-4 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/20 shadow-sm transition-all "><FileText size={16}/> Transfer Forms</div>}
- {request.academic_records_url && <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm border border-slate-200 dark:border-zinc-700 rounded-lg px-4 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/20 shadow-sm transition-all "><FileText size={16}/> Academic Records</div>}
- {request.id_documents_url && <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm border border-slate-200 dark:border-zinc-700 rounded-lg px-4 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/20 shadow-sm transition-all "><FileText size={16}/> ID Documents</div>}
+ {(request.transfer_forms_url || request.transferFormsFile) && <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm border border-slate-200 dark:border-zinc-700 rounded-lg px-4 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/20 shadow-sm transition-all "><FileText size={16}/> Transfer Forms</div>}
+ {(request.academic_records_url || request.academicRecordsFile) && <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm border border-slate-200 dark:border-zinc-700 rounded-lg px-4 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/20 shadow-sm transition-all "><FileText size={16}/> Academic Records</div>}
+ {(request.id_documents_url || request.idDocumentsFile) && <div className="bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm border border-slate-200 dark:border-zinc-700 rounded-lg px-4 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/20 shadow-sm transition-all "><FileText size={16}/> ID Documents</div>}
  </div>
  </div>
  </div>
@@ -192,9 +192,14 @@ export default function CaseDetailSidebar({ request, onClose, user, onStartChat 
  placeholder="Confidential case logging. Will not be serialized to student end."
  />
  </div>
- 
+ </div>
+ )}
+ </div>
+
+ {/* Persistent Action Footer — always visible regardless of active tab */}
  {!isResolved && !isUnassigned && (
- <div className="flex flex-col gap-5 pt-6 border-t border-slate-200/50 dark:border-zinc-800/50">
+ <div className="shrink-0 p-6 sm:px-8 border-t border-white/50 dark:border-zinc-800/50 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md">
+ <div className="flex flex-col gap-4">
  {request.type === 'appointment' && (
  <div className="bg-emerald-50/50 dark:bg-emerald-950/20 backdrop-blur-md border border-emerald-200/60 dark:border-emerald-900/40 rounded-lg p-5 shadow-sm relative overflow-hidden">
  <label className="block text-[10px] uppercase tracking-widest font-black text-emerald-800 dark:text-emerald-400 mb-3">Final Scheduled Date & Time</label>
@@ -212,23 +217,21 @@ export default function CaseDetailSidebar({ request, onClose, user, onStartChat 
  <button onClick={onStartChat} className="w-full bg-slate-100/80 dark:bg-zinc-800/80 backdrop-blur-md border border-slate-200/60 dark:border-zinc-700/60 text-slate-700 dark:text-zinc-300 rounded-xl py-4 font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all hover:bg-white dark:hover:bg-zinc-700 hover:shadow-md ">
  <Send className="w-5 h-5 text-emerald-500" /> Jump to Case Comms Thread
  </button>
- <div className="flex flex-col sm:flex-row gap-4 mt-2">
+ <div className="flex flex-col sm:flex-row gap-4">
  <button onClick={() => submitResolve('approved')} disabled={request.type === 'appointment' && !scheduledAt} className="flex-1 bg-emerald-600 text-white rounded-xl py-4 font-bold text-sm flex items-center justify-center gap-2 hover:bg-emerald-500 shadow-md transition-all disabled:opacity-50 "><CheckSquare className="w-5 h-5"/> Terminate (Approve)</button>
  <button onClick={() => submitResolve('rejected')} className="flex-1 bg-white dark:bg-zinc-900 border-2 border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 rounded-xl py-4 font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-50 dark:hover:bg-red-950/30 hover:border-red-200 dark:hover:border-red-900/50 shadow-sm transition-all "><XSquare className="w-5 h-5"/> Terminate (Reject)</button>
+ </div>
  </div>
  </div>
  )}
 
  {isUnassigned && (
- <div className="flex pt-4">
+ <div className="shrink-0 p-6 sm:px-8 border-t border-white/50 dark:border-zinc-800/50 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md">
  <button onClick={submitClaim} className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl py-4 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all ">
  <Hand className="w-5 h-5" /> Claim Case to Workspace
  </button>
  </div>
  )}
- </div>
- )}
- </div>
  </motion.div>
  </>
  );

@@ -74,11 +74,19 @@ export default function CounselorChatTab({ user, defaultStudentId, requests }: C
  .map(u => ({ id: u.id, name: u.name, studentid: u.studentId, avatarUrl: u.avatarUrl }));
  }, [directoryData, studentIdsFromRequests, conversationStudentIds]);
 
+ // Sync activeStudentId when defaultStudentId changes (e.g. "Jump to Case Comms Thread")
+ useEffect(() => {
+ if (defaultStudentId) {
+ setActiveStudentId(defaultStudentId);
+ }
+ }, [defaultStudentId]);
+
+ // Auto-select first student if none is active
  useEffect(() => {
  if (!activeStudentId && sidebarStudents.length > 0) {
- setActiveStudentId(defaultStudentId || sidebarStudents[0].id);
+ setActiveStudentId(sidebarStudents[0].id);
  }
- }, [sidebarStudents.length, activeStudentId, defaultStudentId]);
+ }, [sidebarStudents.length, activeStudentId]);
 
  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
  const selectedFile = e.target.files?.[0];

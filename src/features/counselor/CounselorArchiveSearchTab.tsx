@@ -32,10 +32,12 @@ export default function CounselorArchiveSearchTab({ requests, onSelectCase }: Co
         matchesStatus = req.status === statusFilter;
       }
 
-      // Type filter
+      // Type filter — DTO uses 'permission' for transfers, 'appointment' for appointments
       let matchesType = true;
-      if (typeFilter !== 'all') {
-        matchesType = req.type?.toLowerCase() === typeFilter.toLowerCase();
+      if (typeFilter === 'appointment') {
+        matchesType = req.type?.toLowerCase() === 'appointment';
+      } else if (typeFilter === 'transfer') {
+        matchesType = req.type?.toLowerCase() === 'permission' || req.type?.toLowerCase() === 'transfer';
       }
 
       return matchesSearch && matchesStatus && matchesType;
