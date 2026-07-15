@@ -270,7 +270,7 @@ export default function LoginScreen() {
                   type="button" 
                   onClick={() => {
                     doLogin(async () => {
-                      const { error } = await supabase.auth.signInWithPassword({ email: 'adam@demo.com', password: 'demo1234' });
+                      const { error } = await supabase.auth.signInWithPassword({ email: 'adam@demo.com', password: 'password' });
                       if (error) throw error;
                     });
                   }} 

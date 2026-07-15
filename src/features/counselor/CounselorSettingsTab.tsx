@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { 
  RefreshCw, Download, CheckCircle, Save, Moon, Sun, 
  Linkedin, Twitter, Instagram, Globe, Sparkles, Plus, 
- Trash2, User, HelpCircle, Briefcase, Tag, Link2, Settings2, Info
+ Trash2, User, HelpCircle, Briefcase, Tag, Link2, Settings2, Info, Upload, Loader2
 } from 'lucide-react';
 
 import { supabase } from '../../lib/supabase';
@@ -34,6 +34,30 @@ export default function CounselorSettingsTab() {
  const [uiSound, setUiSound] = useState(user?.preferences?.uiSound ?? true);
  const [notificationsEnabled, setNotificationsEnabled] = useState(user?.preferences?.notificationsEnabled ?? true);
  const [saved, setSaved] = useState(false);
+  
+ const [avatarUrl, setAvatarUrl] = useState(user?.preferences?.avatarUrl || '');
+ const [uploading, setUploading] = useState(false);
+
+ const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+   try {
+     setUploading(true);
+     if (!event.target.files || event.target.files.length === 0) {
+       throw new Error('You must select an image to upload.');
+     }
+     const file = event.target.files[0];
+     const fileExt = file.name.split('.').pop();
+     const fileName = `${user?.id}-${Math.random()}.${fileExt}`;
+     const filePath = `${fileName}`;
+     const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
+     if (uploadError) throw uploadError;
+     const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+     setAvatarUrl(data.publicUrl);
+   } catch (error: any) {
+     alert(error.message || 'Error uploading image.');
+   } finally {
+     setUploading(false);
+   }
+ };
 
  const bannerPresets = [
  { id: 'blue_calm', name: 'Emerald Calm', class: 'bg-gradient-to-r from-teal-500 to-blue-600' },
@@ -65,7 +89,7 @@ export default function CounselorSettingsTab() {
  avatarColor,
  interests,
  socialHandles: { linkedIn, twitter, instagram, website },
- preferences: { ...user.preferences, uiSound, notificationsEnabled }
+ preferences: { ...user.preferences, uiSound, notificationsEnabled, avatarUrl }
  };
  
  // Save to Supabase
@@ -147,8 +171,12 @@ export default function CounselorSettingsTab() {
  <div className="px-5 pb-6 pt-0 relative flex flex-col items-center text-center">
  
  {/* Avatar Shield */}
- <div className={`w-24 h-24 rounded-full -mt-12 border-4 border-white dark:border-zinc-800 flex items-center justify-center font-bold text-2xl shadow-md transition-all duration-300 ${activeAvatar.bg}`}>
- {getInitials(name || user?.name || 'Counselor')}
+ <div className={`w-24 h-24 rounded-full -mt-12 border-4 border-white dark:border-zinc-800 flex items-center justify-center font-bold text-2xl shadow-md transition-all duration-300 overflow-hidden relative group ${!avatarUrl ? activeAvatar.bg : 'bg-slate-200 dark:bg-zinc-800'}`}>
+   {avatarUrl ? (
+     <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+   ) : (
+     getInitials(name || user?.name || 'Counselor')
+   )}
  </div>
 
  {/* Status Badge */}
@@ -268,6 +296,34 @@ export default function CounselorSettingsTab() {
  </div>
 
  <div className="p-6 space-y-6">
+                
+                {/* Profile Picture Upload Section */}
+                <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-zinc-900/60 rounded-xl border border-slate-200 dark:border-zinc-700">
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center overflow-hidden relative group ${!avatarUrl ? activeAvatar.bg : 'bg-slate-200 dark:bg-zinc-800'}`}>
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="font-bold text-lg">{getInitials(name || user?.name || 'Counselor')}</span>
+                    )}
+                    <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center pointer-events-none">
+                      <Upload size={16} className="text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800 dark:text-zinc-200 mb-1">Profile Picture</p>
+                    <label className="cursor-pointer text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors inline-flex items-center gap-2">
+                      {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                      {uploading ? 'Uploading...' : 'Upload Image'}
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        className="hidden" 
+                        onChange={uploadAvatar}
+                        disabled={uploading}
+                      />
+                    </label>
+                  </div>
+                </div>
  
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div>

@@ -50,7 +50,7 @@ export default function CounselorLoginScreen() {
     setLoading(true);
     setError('');
     try {
-      const { error, data } = await supabase.auth.signInWithPassword({ email: 'nor@demo.com', password: 'demo1234' });
+      const { error, data } = await supabase.auth.signInWithPassword({ email: 'nor@demo.com', password: 'password' });
       if (error) throw error;
       const userRole = data.user?.app_metadata?.role || data.user?.user_metadata?.role;
       if (userRole !== 'counselor') {
