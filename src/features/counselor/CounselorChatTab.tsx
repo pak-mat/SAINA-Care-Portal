@@ -59,7 +59,7 @@ export default function CounselorChatTab({ user, defaultStudentId, requests }: C
  const studentIdsFromRequests = useMemo(() => {
  const ids = new Set<string>();
  requests.forEach(r => {
- if (r.studentid) ids.add(r.studentid);
+ if (r.studentId) ids.add(r.studentId);
  });
  return ids;
  }, [requests]);
@@ -68,11 +68,12 @@ export default function CounselorChatTab({ user, defaultStudentId, requests }: C
  if (!directoryData) return [];
  
  const allRelevantIds = new Set([...studentIdsFromRequests, ...conversationStudentIds]);
+ if (defaultStudentId) allRelevantIds.add(defaultStudentId);
  
  return directoryData
  .filter(u => u.role === 'student' && allRelevantIds.has(u.id))
  .map(u => ({ id: u.id, name: u.name, studentid: u.studentId, avatarUrl: u.avatarUrl }));
- }, [directoryData, studentIdsFromRequests, conversationStudentIds]);
+ }, [directoryData, studentIdsFromRequests, conversationStudentIds, defaultStudentId]);
 
  // Sync activeStudentId when defaultStudentId changes (e.g. "Jump to Case Comms Thread")
  useEffect(() => {

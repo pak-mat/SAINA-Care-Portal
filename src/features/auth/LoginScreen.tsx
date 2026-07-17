@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const FEATURES = [
   { icon: ShieldCheck, title: 'Secure & Confidential', desc: 'End-to-end encrypted sessions between you and your counselor.' },
@@ -14,6 +15,7 @@ const FEATURES = [
 ];
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const { login, user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -182,12 +184,12 @@ export default function LoginScreen() {
               </div>
 
               <div className="mb-8">
-                <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                  {isRegistering ? 'Create account' : 'Welcome back'}
-                </h2>
-                <p className="text-slate-500 dark:text-zinc-400 font-medium text-sm mt-2">
-                  {isRegistering ? 'Join your school counseling portal.' : 'Sign in to your student portal.'}
-                </p>
+                  <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {isRegistering ? 'Create account' : t('auth.welcome')}
+                  </h2>
+                  <p className="text-slate-500 dark:text-zinc-400 font-medium text-sm mt-2">
+                    {isRegistering ? 'Join your school counseling portal.' : t('auth.welcome_subtitle')}
+                  </p>
               </div>
 
               {/* OAuth Buttons (Removed as per user request to keep only the bottom small green bypass button) */}

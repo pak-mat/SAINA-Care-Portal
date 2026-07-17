@@ -14,8 +14,10 @@ import { useDatabaseEvent } from '../../hooks/useDatabaseEvent';
 import { useDirectory, useSocialNetwork, usePresence } from '../../hooks/useSocial';
 import { useGroupChats, useGroupMessages, useDirectMessages } from '../../hooks/useGroupChat';
 import { useInView } from 'react-intersection-observer';
+import { useTranslation } from 'react-i18next';
 
 export default function MyProfilesTab({ onTabChange }) {
+ const { t } = useTranslation();
  const { user, updateUser } = useAuth();
  
  // Double sub-tab state inside My Profiles: 'card', 'directory', 'messenger'
@@ -273,10 +275,10 @@ export default function MyProfilesTab({ onTabChange }) {
  <div>
  <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 flex items-center gap-3 tracking-tight">
  <Compass className={`text-${themeColor}-400 animate-[spin_18s_linear_infinite]`} size={32} />
- My Profiles
+ {t('profiles.title')}
  </h1>
  <p className={`text-${themeColor}-100/80 text-sm font-medium max-w-lg`}>
- Build personal connections, follow campus guides, share wellness cards, and link with peers.
+ {t('profiles.desc')}
  </p>
  </div>
 
@@ -290,7 +292,7 @@ export default function MyProfilesTab({ onTabChange }) {
  : 'text-white/70 hover:text-white hover:bg-white/10'}`}
  >
  <User size={16} />
- Slate Card
+ {t('profiles.slate_card')}
  </button>
  
  <button
@@ -301,7 +303,7 @@ export default function MyProfilesTab({ onTabChange }) {
  : 'text-white/70 hover:text-white hover:bg-white/10'}`}
  >
  <Users size={16} />
- Care Deck
+ {t('profiles.care_deck')}
  {directory.length > 0 && (
  <span className={`bg-${themeColor}-100 text-${themeColor}-700 font-mono text-[10px] px-2 py-0.5 rounded-full ml-1`}>
  {directory.length}

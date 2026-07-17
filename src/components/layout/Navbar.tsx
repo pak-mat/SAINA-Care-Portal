@@ -2,6 +2,7 @@
 import React from 'react';
 import SainaLogo from '../SainaLogo';
 import { useAuth } from '../../context/AuthContext';
+import LanguageToggle from '../ui/LanguageToggle';
 
 export default function Navbar({ title = 'Saina Care Portal', children }: { title?: string; children?: React.ReactNode }) {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ export default function Navbar({ title = 'Saina Care Portal', children }: { titl
       
       <div className="flex items-center gap-3">
         {children}
+        <LanguageToggle />
         {user && (
           <div className="flex items-center gap-4">
             <span className="text-sm font-semibold text-slate-700 dark:text-zinc-300 hidden sm:inline-block">

@@ -10,6 +10,7 @@ import {
  Linkedin, Twitter, Instagram, Globe, Sparkles, Plus, 
  Trash2, User, CreditCard, Tag, Link2, Settings2, Info
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { supabase } from '../../lib/supabase';
 
@@ -17,6 +18,7 @@ const resetDB = () => {};
 const exportDB = () => {};
 
 export default function SettingsTab() {
+ const { t } = useTranslation();
  const { user, updateUser, logout } = useAuth();
  const { darkMode, toggleDarkMode } = useTheme();
  
@@ -156,9 +158,9 @@ export default function SettingsTab() {
  <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 opacity-20 rounded-full blur-3xl translate-x-1/2 -translate-y-1/4 pointer-events-none"></div>
  <div className="relative z-10">
  <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2 flex items-center gap-2 tracking-tight" style={{ fontFamily: 'Montserrat, sans-serif' }}>
- My Social Care Profile
+ {t('settings.title')}
  </h2>
- <p className="text-emerald-100/80 text-sm font-medium mt-1">Customize how you appear to counselors and peer support teams in the applet.</p>
+ <p className="text-emerald-100/80 text-sm font-medium mt-1">{t('settings.subtitle')}</p>
  </div>
  </div>
 
@@ -255,25 +257,25 @@ export default function SettingsTab() {
  onClick={() => setActiveSettingsTab('profile')}
  className={`text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${activeSettingsTab === 'profile' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-700/50'}`}
  >
- <User size={16} /> Profile Information
+ <User size={16} /> {t('settings.tab_profile')}
  </button>
  <button
  onClick={() => setActiveSettingsTab('social')}
  className={`text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${activeSettingsTab === 'social' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-700/50'}`}
  >
- <Link2 size={16} /> Social Links
+ <Link2 size={16} /> {t('settings.tab_social')}
  </button>
  <button
  onClick={() => setActiveSettingsTab('appearance')}
  className={`text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${activeSettingsTab === 'appearance' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-700/50'}`}
  >
- <Settings2 size={16} /> Appearance & Sounds
+ <Settings2 size={16} /> {t('settings.tab_appearance')}
  </button>
  <button
  onClick={() => setActiveSettingsTab('advanced')}
  className={`text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${activeSettingsTab === 'advanced' ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400' : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-700/50'}`}
  >
- <RefreshCw size={16} /> Advanced & Safety
+ <RefreshCw size={16} /> {t('settings.tab_advanced')}
  </button>
  </div>
  </div>
@@ -296,12 +298,12 @@ export default function SettingsTab() {
  <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center border border-emerald-100 dark:border-emerald-800/50 shadow-sm">
  <Link2 size={18} className="text-emerald-600" />
  </div>
- <h3 className="text-xl font-bold text-slate-900 dark:text-zinc-100 tracking-tight">Social Connections</h3>
+ <h3 className="text-xl font-bold text-slate-900 dark:text-zinc-100 tracking-tight">{t('settings.social_connections')}</h3>
  </div>
 
  <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div>
- <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400 mb-1 tracking-wide">LinkedIn Profile Link</label>
+ <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400 mb-1 tracking-wide">{t('settings.linkedin_label')}</label>
  <div className="flex rounded-xl overflow-hidden border border-slate-200 dark:border-zinc-700 shadow-sm">
  <span className="bg-slate-100 dark:bg-zinc-900 border-r border-slate-200 dark:border-zinc-700 px-3 flex items-center justify-center">
  <Linkedin size={14} className="text-sky-600" />
@@ -316,7 +318,7 @@ export default function SettingsTab() {
  </div>
 
  <div>
- <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400 mb-1 tracking-wide">Twitter / X Handle</label>
+ <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400 mb-1 tracking-wide">{t('settings.twitter_label')}</label>
  <div className="flex rounded-xl overflow-hidden border border-slate-200 dark:border-zinc-700 shadow-sm">
  <span className="bg-slate-100 dark:bg-zinc-900 border-r border-slate-200 dark:border-zinc-700 px-3 flex items-center justify-center">
  <Twitter size={14} className="text-slate-700 dark:text-zinc-300" />
@@ -331,7 +333,7 @@ export default function SettingsTab() {
  </div>
 
  <div>
- <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400 mb-1 tracking-wide">Instagram Profile</label>
+ <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400 mb-1 tracking-wide">{t('settings.instagram_label')}</label>
  <div className="flex rounded-xl overflow-hidden border border-slate-200 dark:border-zinc-700 shadow-sm">
  <span className="bg-slate-100 dark:bg-zinc-900 border-r border-slate-200 dark:border-zinc-700 px-3 flex items-center justify-center">
  <Instagram size={14} className="text-rose-500" />
@@ -346,7 +348,7 @@ export default function SettingsTab() {
  </div>
 
  <div>
- <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400 mb-1 tracking-wide">Personal / Class Portfolio</label>
+ <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400 mb-1 tracking-wide">{t('settings.website_label')}</label>
  <div className="flex rounded-xl overflow-hidden border border-slate-200 dark:border-zinc-700 shadow-sm">
  <span className="bg-slate-100 dark:bg-zinc-900 border-r border-slate-200 dark:border-zinc-700 px-3 flex items-center justify-center">
  <Globe size={14} className="text-emerald-600" />
@@ -382,8 +384,8 @@ export default function SettingsTab() {
  {/* Dev sandbox tools */}
  <div className="bg-white dark:bg-zinc-800 border border-orange-200 dark:border-orange-900/50 rounded-lg shadow-sm overflow-hidden">
  <div className="p-4 bg-orange-50 dark:bg-orange-950/20 border-b border-orange-200 dark:border-orange-900/50">
- <h4 className="text-sm font-bold text-orange-950 dark:text-orange-400 uppercase tracking-wide">Developer Tools & Data Control</h4>
- <p className="text-xs text-orange-700 dark:text-orange-500/80 mt-0.5">Reset or make local backups of Saina Care database.</p>
+ <h4 className="text-sm font-bold text-orange-950 dark:text-orange-400 uppercase tracking-wide">{t('settings.developer_tools')}</h4>
+ <p className="text-xs text-orange-700 dark:text-orange-500/80 mt-0.5">{t('settings.developer_desc')}</p>
  </div>
  
  <div className="p-5 flex flex-col sm:flex-row items-center gap-3 bg-white dark:bg-zinc-800">
@@ -392,7 +394,7 @@ export default function SettingsTab() {
  onClick={exportDB}
  className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 dark:bg-zinc-700 dark:hover:bg-zinc-650 text-slate-700 dark:text-zinc-200 px-4 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-transparent shadow-sm"
  >
- <Download size={14} /> Export Backup JSON
+ <Download size={14} /> {t('settings.export_backup')}
  </button>
  
  <div className="w-full sm:w-auto flex items-center">
@@ -402,7 +404,7 @@ export default function SettingsTab() {
  onClick={handleReset}
  className="w-full bg-white dark:bg-zinc-800 border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 px-4 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm"
  >
- <RefreshCw size={14} /> Reset Engine Data
+ <RefreshCw size={14} /> {t('settings.reset_engine')}
  </button>
  ) : (
  <div className="flex w-full overflow-hidden rounded-xl border border-red-500 font-semibold text-xs shadow-sm">
@@ -411,14 +413,14 @@ export default function SettingsTab() {
  onClick={confirmReset}
  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 transition-colors duration-150"
  >
- Confirm Reset
+ {t('settings.confirm_reset')}
  </button>
  <button 
  type="button"
  onClick={() => setShowConfirm(false)}
  className="bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 px-4 py-2 transition-colors duration-150 border-l border-red-100 dark:border-zinc-700"
  >
- Cancel
+ {t('common.cancel')}
  </button>
  </div>
  )}
@@ -428,14 +430,14 @@ export default function SettingsTab() {
  
  <div className="bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg shadow-sm overflow-hidden">
  <div className="p-4 bg-slate-50 dark:bg-zinc-900/20 border-b border-slate-200 dark:border-zinc-700/50">
- <h4 className="text-sm font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wide">Account Session</h4>
+ <h4 className="text-sm font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wide">{t('settings.account_session')}</h4>
  </div>
  <div className="p-5">
  <button 
  onClick={logout}
  className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-slate-900 px-6 py-2.5 rounded-xl text-sm font-bold transition-colors shadow"
  >
- Log Out Securely
+ {t('settings.logout_securely')}
  </button>
  </div>
  </div>
@@ -458,7 +460,7 @@ export default function SettingsTab() {
  >
  <div className="flex items-center gap-2 px-2 text-white">
  <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></div>
- <span className="text-sm font-medium tracking-wide">Unsaved changes</span>
+ <span className="text-sm font-medium tracking-wide">{t('settings.unsaved_changes')}</span>
  </div>
  <div className="flex items-center gap-2">
  <button 
@@ -466,14 +468,14 @@ export default function SettingsTab() {
  onClick={() => reset()}
  className="text-slate-300 hover:text-white px-4 py-2 text-sm font-medium transition-colors"
  >
- Discard
+ {t('settings.discard')}
  </button>
  <button 
  type="button"
  onClick={handleSubmit(handleSave)}
  className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm px-6 py-2 rounded-full flex items-center gap-2 transition-all shadow-lg active:scale-95"
  >
- {saved ? <><CheckCircle size={16} /> Saved</> : <><Save size={16} /> Save changes</>}
+ {saved ? <><CheckCircle size={16} /> {t('settings.saved')}</> : <><Save size={16} /> {t('settings.save_changes')}</>}
  </button>
  </div>
  </motion.div>

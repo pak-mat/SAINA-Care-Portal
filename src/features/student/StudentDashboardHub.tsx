@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/layout/Navbar';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const AppointmentForm = lazy(() => import('./components/AppointmentForm'));
 const PermissionForm = lazy(() => import('./components/PermissionForm'));
@@ -119,6 +120,7 @@ const fetchNotifications = (userId) => [];
 const markNotificationsAsRead = (userId) => {};
 
 export default function StudentDashboardHub() {
+ const { t } = useTranslation();
  const { user, logout } = useAuth();
  const { data: appointmentsData } = useAppointments(1, 100, '', user?.id || '');
  const { data: transfersData } = useTransfers(1, 100, '', user?.id || '');
@@ -184,15 +186,15 @@ export default function StudentDashboardHub() {
  };
 
  const tabs = [
- { id: 'home', label: 'Home', icon: Home },
- { id: 'profiles', label: 'My Profile', icon: Compass },
- { id: 'history', label: 'History', icon: History },
- { id: 'appointment', label: 'Appointment', icon: CalendarPlus },
- { id: 'transfer', label: 'Transfer', icon: FileInput },
- { id: 'chat', label: 'Chat', icon: MessageSquare },
- { id: 'resources', label: 'Vault', icon: BookOpen },
- { id: 'feedback', label: 'Feedback', icon: MessageCircle },
- { id: 'settings', label: 'Settings', icon: Settings }
+ { id: 'home', label: t('nav.dashboard') || 'Home', icon: Home },
+ { id: 'profiles', label: t('nav.my_profiles') || 'My Profile', icon: Compass },
+ { id: 'history', label: t('nav.history') || 'History', icon: History },
+ { id: 'appointment', label: t('nav.appointment') || 'Appointment', icon: CalendarPlus },
+ { id: 'transfer', label: t('nav.transfer') || 'Transfer', icon: FileInput },
+ { id: 'chat', label: t('nav.chat') || 'Chat', icon: MessageSquare },
+ { id: 'resources', label: t('nav.vault') || 'Vault', icon: BookOpen },
+ { id: 'feedback', label: t('nav.feedback') || 'Feedback', icon: MessageCircle },
+ { id: 'settings', label: t('nav.settings') || 'Settings', icon: Settings }
  ];
 
  return (
